@@ -284,6 +284,7 @@ class SupplierStatementScreen extends ConsumerStatefulWidget {
 class _SupplierStatementScreenState
     extends ConsumerState<SupplierStatementScreen> {
   String? _supplierId;
+  bool _unpaidOnly = false;
 
   @override
   Widget build(BuildContext context) {
@@ -313,10 +314,17 @@ class _SupplierStatementScreenState
                 error: (_, _) => const SizedBox.shrink(),
               ),
             ),
-            const SizedBox(height: 16),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _unpaidOnly,
+              title: const Text('Afficher uniquement les documents impayés'),
+              onChanged: (v) => setState(() => _unpaidOnly = v ?? false),
+            ),
+            const SizedBox(height: 8),
             if (_supplierId != null)
               Expanded(
-                child: _statementTable(context, ref, 'supplier', _supplierId!),
+                child: _statementTable(context, ref, 'supplier', _supplierId!, unpaidOnly: _unpaidOnly),
               )
             else
               const Expanded(
@@ -345,6 +353,7 @@ class CustomerStatementScreen extends ConsumerStatefulWidget {
 class _CustomerStatementScreenState
     extends ConsumerState<CustomerStatementScreen> {
   String? _customerId;
+  bool _unpaidOnly = false;
 
   @override
   Widget build(BuildContext context) {
@@ -374,10 +383,17 @@ class _CustomerStatementScreenState
                 error: (_, _) => const SizedBox.shrink(),
               ),
             ),
-            const SizedBox(height: 16),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _unpaidOnly,
+              title: const Text('Afficher uniquement les documents impayés'),
+              onChanged: (v) => setState(() => _unpaidOnly = v ?? false),
+            ),
+            const SizedBox(height: 8),
             if (_customerId != null)
               Expanded(
-                child: _statementTable(context, ref, 'customer', _customerId!),
+                child: _statementTable(context, ref, 'customer', _customerId!, unpaidOnly: _unpaidOnly),
               )
             else
               const Expanded(
@@ -555,73 +571,123 @@ Widget _statementTable(
   BuildContext context,
   WidgetRef ref,
   String type,
-  String partnerId,
-) {
+  String partnerId, {
+  bool unpaidOnly = false,
+}) {
   final async = ref.watch(partnerStatementProvider((type, partnerId)));
   return async.when(
-    data: (rows) => rows.isEmpty
-        ? const Center(
-            child: Text(
-              'Aucun document.',
-              style: TextStyle(color: AppColors.textMuted),
-            ),
-          )
-        : SingleChildScrollView(
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Type')),
-                DataColumn(label: Text('N° document')),
-                DataColumn(label: Text('Date')),
-                DataColumn(label: Text('Total TTC')),
-                DataColumn(label: Text('Payé')),
-                DataColumn(label: Text('Solde')),
-              ],
-              rows: [
-                for (final r in rows)
-                  DataRow(
-                    cells: [
-                      DataCell(Text(r['document_type'] as String? ?? '')),
-                      DataCell(Text(r['document_number'] as String? ?? '')),
-                      DataCell(
-                        Text(
-                          r['document_date']?.toString().split(' ').first ?? '',
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          (r['total_ttc'] as num?)?.toDouble().toStringAsFixed(
-                                3,
-                              ) ??
-                              '0',
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          (r['amount_paid'] as num?)
-                                  ?.toDouble()
-                                  .toStringAsFixed(3) ??
-                              '0',
-                        ),
-                      ),
-                      DataCell(
-                        Text(
-                          (r['balance'] as num?)?.toDouble().toStringAsFixed(
-                                3,
-                              ) ??
-                              '0',
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+    data: (allRows) {
+      final rows = unpaidOnly
+          ? allRows.where((r) => ((r['balance'] as num?)?.toDouble() ?? 0) > 0.001).toList()
+          : allRows;
+      final totalInvoiced = allRows.fold<double>(0, (sum, r) => sum + ((r['total_ttc'] as num?)?.toDouble() ?? 0));
+      final totalPaid = allRows.fold<double>(0, (sum, r) => sum + ((r['amount_paid'] as num?)?.toDouble() ?? 0));
+      final totalOutstanding = allRows.fold<double>(0, (sum, r) => sum + ((r['balance'] as num?)?.toDouble() ?? 0));
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: _balanceCard('Total facturé', totalInvoiced, AppColors.navy, AppColors.surfaceAlt)),
+              const SizedBox(width: 12),
+              Expanded(child: _balanceCard('Total payé', totalPaid, AppColors.success, AppColors.successBg)),
+              const SizedBox(width: 12),
+              Expanded(child: _balanceCard(
+                totalOutstanding > 0.001 ? 'Solde dû (débit)' : 'Solde',
+                totalOutstanding,
+                totalOutstanding > 0.001 ? AppColors.danger : AppColors.textMuted,
+                totalOutstanding > 0.001 ? AppColors.dangerBg : AppColors.surfaceAlt,
+              )),
+            ],
           ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: rows.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Aucun document.',
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: DataTable(
+                      columns: const [
+                        DataColumn(label: Text('Type')),
+                        DataColumn(label: Text('N° document')),
+                        DataColumn(label: Text('Date')),
+                        DataColumn(label: Text('Total TTC')),
+                        DataColumn(label: Text('Payé')),
+                        DataColumn(label: Text('Solde')),
+                      ],
+                      rows: [
+                        for (final r in rows)
+                          DataRow(
+                            cells: [
+                              DataCell(Text(r['document_type'] as String? ?? '')),
+                              DataCell(Text(r['document_number'] as String? ?? '')),
+                              DataCell(
+                                Text(
+                                  r['document_date']?.toString().split(' ').first ?? '',
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  (r['total_ttc'] as num?)?.toDouble().toStringAsFixed(
+                                        3,
+                                      ) ??
+                                      '0',
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  (r['amount_paid'] as num?)
+                                          ?.toDouble()
+                                          .toStringAsFixed(3) ??
+                                      '0',
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  (r['balance'] as num?)?.toDouble().toStringAsFixed(
+                                        3,
+                                      ) ??
+                                      '0',
+                                  style: TextStyle(
+                                    color: ((r['balance'] as num?)?.toDouble() ?? 0) > 0.001 ? AppColors.danger : null,
+                                    fontWeight: ((r['balance'] as num?)?.toDouble() ?? 0) > 0.001 ? FontWeight.w600 : null,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      );
+    },
     loading: () => const Center(child: CircularProgressIndicator()),
     error: (e, _) => Center(
       child: Text(
         e.toString(),
         style: const TextStyle(color: AppColors.danger),
       ),
+    ),
+  );
+}
+
+Widget _balanceCard(String label, double value, Color color, Color bg) {
+  return Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withValues(alpha: 0.3))),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 6),
+        Text('${value.toStringAsFixed(3)} TND', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
+      ],
     ),
   );
 }

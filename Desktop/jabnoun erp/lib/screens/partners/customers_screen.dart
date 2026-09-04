@@ -14,6 +14,7 @@ class CustomersScreen extends StatelessWidget {
       repositoryProvider: customerRepositoryProvider,
       listProvider: customerListProvider,
       searchProvider: customerSearchProvider,
+      governorateFilterProvider: customerGovernorateFilterProvider,
     );
   }
 }

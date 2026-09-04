@@ -12,6 +12,7 @@ import '../screens/drivers/drivers_screen.dart';
 import '../screens/employees/employees_screen.dart';
 import '../screens/admin/admin_screens.dart';
 import '../screens/finance/finance_screens.dart';
+import '../screens/finance/bills_of_exchange_screen.dart';
 import '../screens/inventories/inventories_screen.dart';
 import '../screens/partners/customers_screen.dart';
 import '../screens/partners/suppliers_screen.dart';
@@ -21,6 +22,7 @@ import '../screens/purchases/purchases_screen.dart';
 import '../screens/reports/report_screens.dart';
 import '../screens/returns/returns_screen.dart';
 import '../screens/sales/sales_screen.dart';
+import '../screens/sav/sav_screen.dart';
 import '../screens/shell/app_shell.dart';
 import '../screens/showrooms/showrooms_screen.dart';
 import '../screens/stock/stock_movements_screen.dart';
@@ -211,7 +213,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/pos/closings',
-            builder: (context, state) => const PosSessionsScreen(),
+            builder: (context, state) => const PosSessionsScreen(closedOnly: true),
           ),
           GoRoute(
             path: '/payments',
@@ -224,6 +226,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/payables',
             builder: (context, state) => const PayablesScreen(),
+          ),
+          GoRoute(
+            path: '/bills-of-exchange',
+            builder: (context, state) => const BillsOfExchangeScreen(),
           ),
           GoRoute(
             path: '/expenses',
@@ -264,6 +270,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               '/permissions',
               'Utilisez la liste des employés pour gérer les droits individuels.',
             ),
+          ),
+          GoRoute(
+            path: '/sav',
+            builder: (context, state) => const SavScreen(),
           ),
           GoRoute(
             path: '/audit-log',

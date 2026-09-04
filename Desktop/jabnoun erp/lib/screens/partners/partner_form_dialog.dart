@@ -52,6 +52,7 @@ class _PartnerFormDialogState extends ConsumerState<_PartnerFormDialog> {
   late final TextEditingController _phone;
   late final TextEditingController _email;
   late final TextEditingController _address;
+  String? _governorate;
   late final TextEditingController _taxId;
   late final TextEditingController _paymentTerms;
   bool _saving = false;
@@ -69,6 +70,7 @@ class _PartnerFormDialogState extends ConsumerState<_PartnerFormDialog> {
     _phone = TextEditingController(text: p?.phone ?? '');
     _email = TextEditingController(text: p?.email ?? '');
     _address = TextEditingController(text: p?.address ?? '');
+    _governorate = p?.governorate;
     _taxId = TextEditingController(text: p?.taxId ?? '');
     _paymentTerms = TextEditingController(text: p?.paymentTermsDays.toString() ?? '0');
   }
@@ -94,6 +96,7 @@ class _PartnerFormDialogState extends ConsumerState<_PartnerFormDialog> {
         'phone': _phone.text.trim(),
         'email': _email.text.trim(),
         'address': _address.text.trim(),
+        'governorate': _governorate,
         'tax_id': _taxId.text.trim(),
         'payment_terms_days': int.tryParse(_paymentTerms.text.trim()) ?? 0,
       };
@@ -109,6 +112,7 @@ class _PartnerFormDialogState extends ConsumerState<_PartnerFormDialog> {
           phone: _phone.text.trim(),
           email: _email.text.trim(),
           address: _address.text.trim(),
+          governorate: _governorate,
           taxId: _taxId.text.trim(),
           paymentTermsDays: int.tryParse(_paymentTerms.text.trim()) ?? 0,
           active: true,
@@ -165,6 +169,16 @@ class _PartnerFormDialogState extends ConsumerState<_PartnerFormDialog> {
                 ]),
                 const SizedBox(height: 12),
                 TextFormField(controller: _address, decoration: const InputDecoration(labelText: 'Adresse')),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String?>(
+                  initialValue: _governorate,
+                  decoration: const InputDecoration(labelText: 'Gouvernorat'),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('—')),
+                    for (final g in tunisianGovernorates) DropdownMenuItem(value: g, child: Text(g)),
+                  ],
+                  onChanged: (v) => setState(() => _governorate = v),
+                ),
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(child: TextFormField(controller: _taxId, decoration: const InputDecoration(labelText: 'Matricule fiscal'))),

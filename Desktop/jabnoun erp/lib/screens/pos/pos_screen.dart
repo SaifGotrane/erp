@@ -203,7 +203,11 @@ class _SessionDetail extends StatelessWidget {
 }
 
 class PosSessionsScreen extends ConsumerWidget {
-  const PosSessionsScreen({super.key});
+  /// Quand `true` (route `/pos/closings`), affiche uniquement l'historique
+  /// des clôtures déjà effectuées (vue dédiée, sans filtre de statut) ; la
+  /// fermeture d'une session en cours se fait depuis l'écran Caisse.
+  final bool closedOnly;
+  const PosSessionsScreen({super.key, this.closedOnly = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -211,30 +215,35 @@ class PosSessionsScreen extends ConsumerWidget {
     final statusFilter = ref.watch(posSessionStatusFilterProvider);
 
     return PageScaffold(
-      title: 'Sessions de caisse',
-      subtitle: 'Historique des sessions d\'ouverture et de clôture',
+      title: closedOnly ? 'Clôtures de caisse' : 'Sessions de caisse',
+      subtitle: closedOnly
+          ? 'Historique des sessions déjà clôturées'
+          : 'Historique des sessions d\'ouverture et de clôture',
       child: ContentCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              width: 180, height: 38,
-              child: DropdownButtonFormField<String?>(
-                initialValue: statusFilter,
-                decoration: const InputDecoration(labelText: 'Statut'),
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('Tous')),
-                  DropdownMenuItem(value: 'ouverte', child: Text('Ouverte')),
-                  DropdownMenuItem(value: 'cloturee', child: Text('Clôturée')),
-                  DropdownMenuItem(value: 'annulee', child: Text('Annulée')),
-                ],
-                onChanged: (v) => ref.read(posSessionStatusFilterProvider.notifier).state = v,
+            if (!closedOnly)
+              SizedBox(
+                width: 180, height: 38,
+                child: DropdownButtonFormField<String?>(
+                  initialValue: statusFilter,
+                  decoration: const InputDecoration(labelText: 'Statut'),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('Tous')),
+                    DropdownMenuItem(value: 'ouverte', child: Text('Ouverte')),
+                    DropdownMenuItem(value: 'cloturee', child: Text('Clôturée')),
+                    DropdownMenuItem(value: 'annulee', child: Text('Annulée')),
+                  ],
+                  onChanged: (v) => ref.read(posSessionStatusFilterProvider.notifier).state = v,
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
+            if (!closedOnly) const SizedBox(height: 14),
             Expanded(
               child: async.when(
-                data: (sessions) => sessions.isEmpty
+                data: (allSessions) {
+                  final sessions = closedOnly ? allSessions.where((s) => s.status == 'cloturee').toList() : allSessions;
+                  return sessions.isEmpty
                     ? const Center(child: Text('Aucune session.', style: TextStyle(color: AppColors.textMuted)))
                     : SingleChildScrollView(
                         child: DataTable(
@@ -262,7 +271,8 @@ class PosSessionsScreen extends ConsumerWidget {
                               ]),
                           ],
                         ),
-                      ),
+                      );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text(e.toString(), style: const TextStyle(color: AppColors.danger))),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/sale.dart';
+import '../models/sale_sub_invoice.dart';
 import '../models/delivery_note.dart';
 import '../models/returns.dart';
 import '../models/pos_finance.dart';
@@ -26,6 +27,10 @@ final saleListProvider = FutureProvider<List<Sale>>((ref) async {
   final search = ref.watch(saleSearchProvider);
   final status = ref.watch(saleStatusFilterProvider);
   return ref.watch(saleRepositoryProvider).fetchAll(search: search, status: status);
+});
+
+final saleSubInvoicesProvider = FutureProvider.family<List<SaleSubInvoice>, String>((ref, saleId) {
+  return ref.watch(saleRepositoryProvider).fetchSubInvoices(saleId);
 });
 
 // --- Delivery notes: list state + provider ---

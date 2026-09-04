@@ -17,6 +17,7 @@ class PartnersListScreen extends ConsumerWidget {
   final Provider<PartnerRepository> repositoryProvider;
   final FutureProvider<List<Partner>> listProvider;
   final StateProvider<String> searchProvider;
+  final StateProvider<String?> governorateFilterProvider;
 
   const PartnersListScreen({
     super.key,
@@ -26,12 +27,14 @@ class PartnersListScreen extends ConsumerWidget {
     required this.repositoryProvider,
     required this.listProvider,
     required this.searchProvider,
+    required this.governorateFilterProvider,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partnersAsync = ref.watch(listProvider);
     final search = ref.watch(searchProvider);
+    final governorate = ref.watch(governorateFilterProvider);
 
     return PageScaffold(
       title: title,
@@ -53,11 +56,29 @@ class PartnersListScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppSearchField(
-              hint: 'Rechercher $title',
-              initialValue: search,
-              onChanged: (v) => ref.read(searchProvider.notifier).state = v,
-            ),
+            Row(children: [
+              Expanded(
+                child: AppSearchField(
+                  hint: 'Rechercher $title',
+                  initialValue: search,
+                  onChanged: (v) => ref.read(searchProvider.notifier).state = v,
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 200,
+                height: 38,
+                child: DropdownButtonFormField<String?>(
+                  initialValue: governorate,
+                  decoration: const InputDecoration(labelText: 'Gouvernorat'),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('Tous')),
+                    for (final g in tunisianGovernorates) DropdownMenuItem(value: g, child: Text(g)),
+                  ],
+                  onChanged: (v) => ref.read(governorateFilterProvider.notifier).state = v,
+                ),
+              ),
+            ]),
             const SizedBox(height: 14),
             Expanded(
               child: partnersAsync.when(
@@ -70,6 +91,7 @@ class PartnersListScreen extends ConsumerWidget {
                             DataColumn(label: Text('Nom')),
                             DataColumn(label: Text('Société')),
                             DataColumn(label: Text('Téléphone')),
+                            DataColumn(label: Text('Gouvernorat')),
                             DataColumn(label: Text('Statut')),
                             DataColumn(label: Text('')),
                           ],
@@ -80,6 +102,7 @@ class PartnersListScreen extends ConsumerWidget {
                                 DataCell(Text(p.name)),
                                 DataCell(Text(p.companyName ?? '-')),
                                 DataCell(Text(p.phone ?? '-')),
+                                DataCell(Text(p.governorate ?? '-')),
                                 DataCell(StatusBadge.active(p.active)),
                                 DataCell(_rowActions(context, ref, p)),
                               ]),

@@ -14,6 +14,7 @@ class SuppliersScreen extends StatelessWidget {
       repositoryProvider: supplierRepositoryProvider,
       listProvider: supplierListProvider,
       searchProvider: supplierSearchProvider,
+      governorateFilterProvider: supplierGovernorateFilterProvider,
     );
   }
 }

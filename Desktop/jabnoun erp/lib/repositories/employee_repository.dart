@@ -112,6 +112,25 @@ class EmployeeRepository extends BaseRepository {
         return [PermissionAction.view];
       case PermissionModule.settings:
         return [PermissionAction.edit];
+      case PermissionModule.subInvoices:
+        return [PermissionAction.view, PermissionAction.create, PermissionAction.edit];
+      case PermissionModule.billsOfExchange:
+        return [
+          PermissionAction.view,
+          PermissionAction.create,
+          PermissionAction.edit,
+          PermissionAction.markPaid,
+          PermissionAction.print,
+        ];
+      case PermissionModule.supplierSettlements:
+        return [PermissionAction.view, PermissionAction.create, PermissionAction.edit];
+      case PermissionModule.sav:
+        return [
+          PermissionAction.view,
+          PermissionAction.create,
+          PermissionAction.edit,
+          PermissionAction.resolve,
+        ];
       default:
         return [
           PermissionAction.view,

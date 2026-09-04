@@ -127,6 +127,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _email = TextEditingController();
   final _taxId = TextEditingController();
   final _currency = TextEditingController(text: 'TND');
+  final _bankName = TextEditingController();
+  final _bankAgency = TextEditingController();
+  final _ribCodeBanque = TextEditingController();
+  final _ribCodeAgence = TextEditingController();
+  final _ribCompte = TextEditingController();
+  final _ribCle = TextEditingController();
+  final _defaultBillPlace = TextEditingController();
   bool _allowNegativeStock = false;
   bool _loading = true;
   bool _saving = false;
@@ -146,6 +153,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _email.dispose();
     _taxId.dispose();
     _currency.dispose();
+    _bankName.dispose();
+    _bankAgency.dispose();
+    _ribCodeBanque.dispose();
+    _ribCodeAgence.dispose();
+    _ribCompte.dispose();
+    _ribCle.dispose();
+    _defaultBillPlace.dispose();
     super.dispose();
   }
 
@@ -162,6 +176,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _taxId.text = settings.taxId ?? '';
       _currency.text = settings.currency;
       _allowNegativeStock = settings.allowNegativeStock;
+      _bankName.text = settings.bankName ?? '';
+      _bankAgency.text = settings.bankAgency ?? '';
+      _ribCodeBanque.text = settings.ribCodeBanque ?? '';
+      _ribCodeAgence.text = settings.ribCodeAgence ?? '';
+      _ribCompte.text = settings.ribCompte ?? '';
+      _ribCle.text = settings.ribCle ?? '';
+      _defaultBillPlace.text = settings.defaultBillPlace ?? '';
     } catch (_) {
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -185,6 +206,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               taxId: _taxId.text.trim().isEmpty ? null : _taxId.text.trim(),
               currency: _currency.text.trim(),
               allowNegativeStock: _allowNegativeStock,
+              bankName: _bankName.text.trim(),
+              bankAgency: _bankAgency.text.trim(),
+              ribCodeBanque: _ribCodeBanque.text.trim(),
+              ribCodeAgence: _ribCodeAgence.text.trim(),
+              ribCompte: _ribCompte.text.trim(),
+              ribCle: _ribCle.text.trim(),
+              defaultBillPlace: _defaultBillPlace.text.trim(),
             ),
           );
       if (mounted) showAppSnackBar(context, 'Paramètres enregistrés.');
@@ -309,6 +337,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   value: _allowNegativeStock,
                   onChanged: (v) => setState(() => _allowNegativeStock = v),
                 ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Domiciliation bancaire (lettres de change)',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.navy,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Utilisées pour pré-remplir automatiquement les lettres de change (tiré). Renseignées une seule fois.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(child: TextField(controller: _bankName, decoration: const InputDecoration(labelText: 'Banque'))),
+                  const SizedBox(width: 12),
+                  Expanded(child: TextField(controller: _bankAgency, decoration: const InputDecoration(labelText: 'Agence bancaire'))),
+                ]),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(child: TextField(controller: _ribCodeBanque, decoration: const InputDecoration(labelText: 'Code banque'))),
+                  const SizedBox(width: 12),
+                  Expanded(child: TextField(controller: _ribCodeAgence, decoration: const InputDecoration(labelText: 'Code agence'))),
+                ]),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(child: TextField(controller: _ribCompte, decoration: const InputDecoration(labelText: 'N° compte'))),
+                  const SizedBox(width: 12),
+                  Expanded(child: TextField(controller: _ribCle, decoration: const InputDecoration(labelText: 'Clé'))),
+                ]),
+                const SizedBox(height: 12),
+                TextField(controller: _defaultBillPlace, decoration: const InputDecoration(labelText: 'Lieu de création par défaut')),
               ],
             ),
           ),

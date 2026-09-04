@@ -84,6 +84,8 @@ class Sale extends Equatable {
   final double amountPaid;
   final bool isPos;
   final String? notes;
+  final double stampDutyAmount;
+  final String? customerDisplayName;
   final List<SaleLine> lines;
 
   const Sale({
@@ -105,6 +107,8 @@ class Sale extends Equatable {
     this.amountPaid = 0,
     this.isPos = false,
     this.notes,
+    this.stampDutyAmount = 1,
+    this.customerDisplayName,
     this.lines = const [],
   });
 
@@ -131,6 +135,8 @@ class Sale extends Equatable {
     amountPaid: (map['amount_paid'] as num?)?.toDouble() ?? 0,
     isPos: map['is_pos'] as bool? ?? false,
     notes: map['notes'] as String?,
+    stampDutyAmount: (map['stamp_duty_amount'] as num?)?.toDouble() ?? 1,
+    customerDisplayName: map['customer_display_name'] as String?,
     lines:
         (map['sale_lines'] as List?)
             ?.map((e) => SaleLine.fromMap(e as Map<String, dynamic>))
@@ -158,6 +164,8 @@ class Sale extends Equatable {
     amountPaid,
     isPos,
     notes,
+    stampDutyAmount,
+    customerDisplayName,
     lines,
   ];
 }

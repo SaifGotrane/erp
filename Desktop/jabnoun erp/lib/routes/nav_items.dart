@@ -65,6 +65,7 @@ const List<NavSection> appNavSections = [
     NavItem(label: 'Paiements', route: '/payments', icon: Icons.payments_outlined, permissionModule: 'payments'),
     NavItem(label: 'Créances', route: '/receivables', icon: Icons.trending_up_outlined, permissionModule: 'customers'),
     NavItem(label: 'Dettes', route: '/payables', icon: Icons.trending_down_outlined, permissionModule: 'suppliers'),
+    NavItem(label: 'Lettres de change', route: '/bills-of-exchange', icon: Icons.request_page_outlined, permissionModule: 'bills_of_exchange'),
     NavItem(label: 'Charges', route: '/expenses', icon: Icons.receipt_outlined, permissionModule: 'expenses'),
     NavItem(label: 'TVA', route: '/tva', icon: Icons.percent_outlined, permissionModule: 'reports'),
   ]),
@@ -76,6 +77,9 @@ const List<NavSection> appNavSections = [
     NavItem(label: 'TVA', route: '/reports/tva', icon: Icons.request_quote_outlined, permissionModule: 'reports'),
     NavItem(label: 'Fournisseurs', route: '/reports/suppliers', icon: Icons.summarize_outlined, permissionModule: 'reports'),
     NavItem(label: 'Clients', route: '/reports/customers', icon: Icons.summarize_outlined, permissionModule: 'reports'),
+  ]),
+  NavSection(title: 'SERVICE', items: [
+    NavItem(label: 'Service Après-Vente', route: '/sav', icon: Icons.support_agent_outlined, permissionModule: 'sav'),
   ]),
   NavSection(title: 'ADMINISTRATION', items: [
     NavItem(label: 'Employés', route: '/employees', icon: Icons.groups_outlined, permissionModule: 'employees'),

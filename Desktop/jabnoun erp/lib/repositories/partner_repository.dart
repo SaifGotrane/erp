@@ -7,7 +7,7 @@ class PartnerRepository extends BaseRepository {
   final String table;
   PartnerRepository(this.table);
 
-  Future<List<Partner>> fetchAll({String? search, bool? activeOnly}) {
+  Future<List<Partner>> fetchAll({String? search, bool? activeOnly, String? governorate}) {
     return guard(() async {
       var query = client.from(table).select();
       if (search != null && search.trim().isNotEmpty) {
@@ -15,6 +15,9 @@ class PartnerRepository extends BaseRepository {
       }
       if (activeOnly == true) {
         query = query.eq('active', true);
+      }
+      if (governorate != null && governorate.isNotEmpty) {
+        query = query.eq('governorate', governorate);
       }
       final data = await query.order('name');
       return (data as List).map((e) => Partner.fromMap(e as Map<String, dynamic>)).toList();

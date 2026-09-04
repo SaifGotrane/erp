@@ -9,13 +9,17 @@ final customerRepositoryProvider =
 
 final supplierSearchProvider = StateProvider<String>((ref) => '');
 final customerSearchProvider = StateProvider<String>((ref) => '');
+final supplierGovernorateFilterProvider = StateProvider<String?>((ref) => null);
+final customerGovernorateFilterProvider = StateProvider<String?>((ref) => null);
 
 final supplierListProvider = FutureProvider<List<Partner>>((ref) async {
   final search = ref.watch(supplierSearchProvider);
-  return ref.watch(supplierRepositoryProvider).fetchAll(search: search);
+  final governorate = ref.watch(supplierGovernorateFilterProvider);
+  return ref.watch(supplierRepositoryProvider).fetchAll(search: search, governorate: governorate);
 });
 
 final customerListProvider = FutureProvider<List<Partner>>((ref) async {
   final search = ref.watch(customerSearchProvider);
-  return ref.watch(customerRepositoryProvider).fetchAll(search: search);
+  final governorate = ref.watch(customerGovernorateFilterProvider);
+  return ref.watch(customerRepositoryProvider).fetchAll(search: search, governorate: governorate);
 });

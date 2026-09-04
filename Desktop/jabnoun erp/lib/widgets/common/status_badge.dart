@@ -34,6 +34,23 @@ class StatusBadge extends StatelessWidget {
     }
   }
 
+  factory StatusBadge.sav(String status) {
+    switch (status) {
+      case 'ouvert':
+        return const StatusBadge(label: 'Ouvert', color: AppColors.danger, background: AppColors.dangerBg);
+      case 'en_cours':
+        return const StatusBadge(label: 'En cours', color: AppColors.warning, background: AppColors.warningBg);
+      case 'en_attente_fournisseur':
+        return const StatusBadge(label: 'En attente fournisseur', color: AppColors.warning, background: AppColors.warningBg);
+      case 'resolu':
+        return const StatusBadge(label: 'Résolu', color: AppColors.primary, background: AppColors.primaryLight);
+      case 'termine':
+        return const StatusBadge(label: 'Terminé', color: AppColors.success, background: AppColors.successBg);
+      default:
+        return StatusBadge(label: status, color: AppColors.textMuted, background: AppColors.surfaceAlt);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(

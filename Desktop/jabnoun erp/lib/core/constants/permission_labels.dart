@@ -30,6 +30,10 @@ class PermissionLabels {
     PermissionModule.journalisation: 'Journalisation',
     PermissionModule.employees: 'Employés',
     PermissionModule.settings: 'Paramètres',
+    PermissionModule.subInvoices: 'Sous-factures',
+    PermissionModule.billsOfExchange: 'Lettres de change',
+    PermissionModule.supplierSettlements: 'Règlements fournisseurs',
+    PermissionModule.sav: 'Service après-vente',
   };
 
   static const Map<String, String> actions = {
@@ -47,6 +51,9 @@ class PermissionLabels {
     PermissionAction.closePos: 'Fermer caisse',
     PermissionAction.viewRevenuePos: 'Voir recettes',
     PermissionAction.export: 'Exporter',
+    PermissionAction.markPaid: 'Marquer payée',
+    PermissionAction.print: 'Imprimer',
+    PermissionAction.resolve: 'Résoudre',
   };
 
   static String module(String key) => modules[key] ?? key;

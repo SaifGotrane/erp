@@ -9,6 +9,7 @@ import '../../widgets/common/search_field.dart';
 import '../../widgets/common/status_badge.dart';
 import '../finance/payment_dialog.dart';
 import 'sale_form_dialog.dart';
+import 'sub_invoice_dialog.dart';
 import '../../services/transaction_pdf_service.dart';
 
 class SalesScreen extends ConsumerWidget {
@@ -202,6 +203,16 @@ class SalesScreen extends ConsumerWidget {
             ),
             tooltip: 'Modifier',
             onPressed: () => showSaleFormDialog(context, ref, sale: s),
+          ),
+        if (s.status != 'brouillon' && s.status != 'annule')
+          IconButton(
+            icon: const Icon(
+              Icons.call_split,
+              size: 18,
+              color: AppColors.primary,
+            ),
+            tooltip: 'Sous-factures',
+            onPressed: () => showSubInvoiceDialog(context, ref, s),
           ),
         if (s.status != 'annule' && s.status != 'paye')
           IconButton(

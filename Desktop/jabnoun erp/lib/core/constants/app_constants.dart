@@ -38,6 +38,10 @@ class PermissionModule {
   static const String journalisation = 'journalisation';
   static const String employees = 'employees';
   static const String settings = 'settings';
+  static const String subInvoices = 'sub_invoices';
+  static const String billsOfExchange = 'bills_of_exchange';
+  static const String supplierSettlements = 'supplier_settlements';
+  static const String sav = 'sav';
 
   static const List<String> all = [
     articles,
@@ -64,6 +68,10 @@ class PermissionModule {
     journalisation,
     employees,
     settings,
+    subInvoices,
+    billsOfExchange,
+    supplierSettlements,
+    sav,
   ];
 }
 
@@ -86,6 +94,9 @@ class PermissionAction {
   static const String closePos = 'close_pos';
   static const String viewRevenuePos = 'view_revenue_pos';
   static const String export = 'export';
+  static const String markPaid = 'mark_paid';
+  static const String print = 'print';
+  static const String resolve = 'resolve';
 }
 
 /// Statuts génériques de documents (achats, ventes, transferts...).

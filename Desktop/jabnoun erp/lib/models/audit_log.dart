@@ -76,6 +76,13 @@ class CompanySettings extends Equatable {
   final String? taxId;
   final String currency;
   final bool allowNegativeStock;
+  final String? bankName;
+  final String? bankAgency;
+  final String? ribCodeBanque;
+  final String? ribCodeAgence;
+  final String? ribCompte;
+  final String? ribCle;
+  final String? defaultBillPlace;
 
   const CompanySettings({
     required this.id,
@@ -87,7 +94,25 @@ class CompanySettings extends Equatable {
     this.taxId,
     this.currency = 'TND',
     this.allowNegativeStock = false,
+    this.bankName,
+    this.bankAgency,
+    this.ribCodeBanque,
+    this.ribCodeAgence,
+    this.ribCompte,
+    this.ribCle,
+    this.defaultBillPlace,
   });
+
+  /// Vrai si toutes les informations bancaires nécessaires à l'impression
+  /// des lettres de change sont déjà connues (voir §1.8/§10).
+  bool get hasCompleteBankInfo =>
+      (bankName?.isNotEmpty ?? false) &&
+      (bankAgency?.isNotEmpty ?? false) &&
+      (ribCodeBanque?.isNotEmpty ?? false) &&
+      (ribCodeAgence?.isNotEmpty ?? false) &&
+      (ribCompte?.isNotEmpty ?? false) &&
+      (ribCle?.isNotEmpty ?? false) &&
+      (defaultBillPlace?.isNotEmpty ?? false);
 
   factory CompanySettings.fromMap(Map<String, dynamic> map) => CompanySettings(
         id: map['id'] as String,
@@ -99,6 +124,13 @@ class CompanySettings extends Equatable {
         taxId: map['tax_id'] as String?,
         currency: map['currency'] as String? ?? 'TND',
         allowNegativeStock: map['allow_negative_stock'] as bool? ?? false,
+        bankName: map['bank_name'] as String?,
+        bankAgency: map['bank_agency'] as String?,
+        ribCodeBanque: map['rib_code_banque'] as String?,
+        ribCodeAgence: map['rib_code_agence'] as String?,
+        ribCompte: map['rib_compte'] as String?,
+        ribCle: map['rib_cle'] as String?,
+        defaultBillPlace: map['default_bill_place'] as String?,
       );
 
   Map<String, dynamic> toUpdateMap() => {
@@ -110,6 +142,13 @@ class CompanySettings extends Equatable {
         'tax_id': taxId?.isEmpty == true ? null : taxId,
         'currency': currency,
         'allow_negative_stock': allowNegativeStock,
+        'bank_name': bankName?.isEmpty == true ? null : bankName,
+        'bank_agency': bankAgency?.isEmpty == true ? null : bankAgency,
+        'rib_code_banque': ribCodeBanque?.isEmpty == true ? null : ribCodeBanque,
+        'rib_code_agence': ribCodeAgence?.isEmpty == true ? null : ribCodeAgence,
+        'rib_compte': ribCompte?.isEmpty == true ? null : ribCompte,
+        'rib_cle': ribCle?.isEmpty == true ? null : ribCle,
+        'default_bill_place': defaultBillPlace?.isEmpty == true ? null : defaultBillPlace,
         'updated_at': DateTime.now().toIso8601String(),
       };
 

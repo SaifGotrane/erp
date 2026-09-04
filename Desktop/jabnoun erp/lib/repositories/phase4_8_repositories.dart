@@ -1,4 +1,5 @@
 import '../models/sale.dart';
+import '../models/sale_sub_invoice.dart';
 import '../models/delivery_note.dart';
 import '../models/returns.dart';
 import '../models/pos_finance.dart';
@@ -63,6 +64,7 @@ class SaleRepository extends BaseRepository {
     bool isPos = false,
     String? posSessionId,
     String? notes,
+    String? customerDisplayName,
     required List<SaleLine> lines,
   }) {
     return guard(() async {
@@ -94,6 +96,7 @@ class SaleRepository extends BaseRepository {
             'is_pos': isPos,
             'pos_session_id': posSessionId,
             'notes': notes?.isEmpty == true ? null : notes,
+            'customer_display_name': customerDisplayName?.isEmpty == true ? null : customerDisplayName,
             'created_by': client.auth.currentUser?.id,
           })
           .select()
@@ -174,6 +177,42 @@ class SaleRepository extends BaseRepository {
 
   Future<void> delete(String id) {
     return guard(() => client.from('sales').delete().eq('id', id));
+  }
+
+  Future<List<SaleSubInvoice>> fetchSubInvoices(String saleId) {
+    return guard(() async {
+      final data = await client
+          .from('sale_sub_invoices')
+          .select('*, customer:customers(name)')
+          .eq('sale_id', saleId)
+          .order('created_at');
+      return (data as List)
+          .map((e) => SaleSubInvoice.fromMap(e as Map<String, dynamic>))
+          .toList();
+    });
+  }
+
+  Future<SaleSubInvoice> addSubInvoice({
+    required String saleId,
+    required String subClientName,
+    required double amount,
+    String? customerId,
+    String? notes,
+  }) {
+    return guard(() async {
+      final result = await client.rpc('add_sale_sub_invoice', params: {
+        'p_sale_id': saleId,
+        'p_sub_client_name': subClientName,
+        'p_amount': amount,
+        'p_customer_id': customerId,
+        'p_notes': notes,
+      });
+      return SaleSubInvoice.fromMap(result as Map<String, dynamic>);
+    });
+  }
+
+  Future<void> deleteSubInvoice(String id) {
+    return guard(() => client.rpc('delete_sale_sub_invoice', params: {'p_id': id}));
   }
 }
 

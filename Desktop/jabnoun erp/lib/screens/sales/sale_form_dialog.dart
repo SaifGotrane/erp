@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/article.dart';
+import '../../models/partner.dart';
 import '../../models/sale.dart';
 import '../../providers/article_provider.dart';
 import '../../providers/depot_provider.dart';
@@ -85,6 +86,8 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
   String? _paymentMethodId;
   DateTime _saleDate = DateTime.now();
   final List<_SaleLineEditor> _lines = [];
+  final _customerDisplayName = TextEditingController();
+  static const double _stampDutyAmount = 1;
   bool _saving = false;
 
   @override
@@ -100,6 +103,7 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
       _notes.text = s.notes ?? '';
       _discountPercent.text = s.discountPercent.toString();
       _saleDate = s.saleDate;
+      _customerDisplayName.text = s.customerDisplayName ?? '';
       for (final l in s.lines) {
         _lines.add(
           _SaleLineEditor(
@@ -122,6 +126,7 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
   void dispose() {
     _notes.dispose();
     _discountPercent.dispose();
+    _customerDisplayName.dispose();
     for (final l in _lines) {
       l.quantity.dispose();
       l.unitPriceHt.dispose();
@@ -132,7 +137,14 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
 
   double get _totalHt => _lines.fold(0, (sum, l) => sum + l.lineHt);
   double get _totalTva => _lines.fold(0, (sum, l) => sum + l.lineTva);
-  double get _totalTtc => _totalHt + _totalTva;
+  double get _totalTtc => _totalHt + _totalTva + _stampDutyAmount;
+
+  bool _isParticulier(List<Partner> customers) {
+    if (_customerId == null) return false;
+    final match = customers.where((c) => c.id == _customerId);
+    if (match.isEmpty) return false;
+    return match.first.name.trim().toLowerCase() == 'particulier';
+  }
 
   void _addLine(Article article) {
     setState(() {
@@ -179,6 +191,16 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
       );
       return;
     }
+    final customers = ref.read(customerListProvider).value ?? const [];
+    final isParticulier = _isParticulier(customers);
+    if (isParticulier && _customerDisplayName.text.trim().isEmpty) {
+      showAppSnackBar(
+        context,
+        'Veuillez saisir le nom à afficher sur la facture pour ce client particulier.',
+        isError: true,
+      );
+      return;
+    }
 
     setState(() => _saving = true);
 
@@ -217,6 +239,7 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
           isPos: widget.isPos,
           posSessionId: widget.posSessionId,
           notes: _notes.text.trim(),
+          customerDisplayName: isParticulier ? _customerDisplayName.text.trim() : null,
           lines: lines,
         );
         if (widget.isPos) {
@@ -252,6 +275,7 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
               ) ??
               0,
           'notes': _notes.text.trim().isEmpty ? null : _notes.text.trim(),
+          'customer_display_name': isParticulier ? _customerDisplayName.text.trim() : null,
           'sale_date': _saleDate.toIso8601String().split('T').first,
           'total_ht': _totalHt,
           'total_tva': _totalTva,
@@ -681,6 +705,7 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
                     children: [
                       Text('Total HT: ${_totalHt.toStringAsFixed(3)}'),
                       Text('Total TVA: ${_totalTva.toStringAsFixed(3)}'),
+                      Text('Droit de timbre: ${_stampDutyAmount.toStringAsFixed(3)}'),
                       Text(
                         'Total TTC: ${_totalTtc.toStringAsFixed(3)}',
                         style: const TextStyle(fontWeight: FontWeight.w700),
@@ -689,6 +714,21 @@ class _SaleFormDialogState extends ConsumerState<SaleFormDialog> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                customersAsync.maybeWhen(
+                  data: (customers) => _isParticulier(customers)
+                      ? Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: TextFormField(
+                            controller: _customerDisplayName,
+                            decoration: const InputDecoration(
+                              labelText: 'Nom à afficher sur la facture *',
+                              helperText: 'Le client "Particulier" n\'apparaîtra pas tel quel sur la facture.',
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                  orElse: () => const SizedBox.shrink(),
+                ),
                 TextFormField(
                   controller: _notes,
                   decoration: const InputDecoration(

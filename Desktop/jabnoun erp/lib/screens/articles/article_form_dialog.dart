@@ -62,6 +62,44 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
   double get _purchase => double.tryParse(_purchasePrice.text.trim().replaceAll(',', '.')) ?? 0;
   double get _marginValue => double.tryParse(_margin.text.trim().replaceAll(',', '.')) ?? 0;
 
+  /// Permet de créer une catégorie sans quitter le formulaire d'article
+  /// (voir cahier des charges §7) : ouvre une petite boîte de dialogue,
+  /// crée la catégorie, l'ajoute à la liste et la sélectionne aussitôt.
+  Future<void> _createCategoryInline() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Nouvelle catégorie'),
+        content: SizedBox(
+          width: 320,
+          child: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Nom de la catégorie'),
+            onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    try {
+      final category = await ref.read(articleRepositoryProvider).createCategory(name);
+      ref.invalidate(articleCategoriesProvider);
+      setState(() => _categoryId = category.id);
+      if (mounted) showAppSnackBar(context, 'Catégorie "$name" créée.');
+    } catch (e) {
+      if (mounted) showAppSnackBar(context, e.toString(), isError: true);
+    }
+  }
+
   Future<void> _save(List<TaxRate> taxRates) async {
     if (!_formKey.currentState!.validate()) return;
     if (_taxRateId == null) {
@@ -160,11 +198,23 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
                 Row(children: [
                   Expanded(
                     child: categoriesAsync.when(
-                      data: (categories) => DropdownButtonFormField<String>(
-                        initialValue: _categoryId,
-                        decoration: const InputDecoration(labelText: 'Catégorie'),
-                        items: [for (final c in categories) DropdownMenuItem(value: c.id, child: Text(c.name))],
-                        onChanged: (v) => setState(() => _categoryId = v),
+                      data: (categories) => Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _categoryId,
+                              decoration: const InputDecoration(labelText: 'Catégorie'),
+                              items: [for (final c in categories) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                              onChanged: (v) => setState(() => _categoryId = v),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                            tooltip: 'Nouvelle catégorie',
+                            onPressed: _createCategoryInline,
+                          ),
+                        ],
                       ),
                       loading: () => const LinearProgressIndicator(),
                       error: (_, _) => const SizedBox.shrink(),
