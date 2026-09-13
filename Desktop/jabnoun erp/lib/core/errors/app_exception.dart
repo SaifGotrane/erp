@@ -76,6 +76,14 @@ AppException mapErrorToAppException(Object error) {
     if (msg.contains('network') || msg.contains('socket') || msg.contains('timeout')) {
       return const AppException('Impossible de contacter le serveur. Vérifiez votre connexion.');
     }
+    // Les exceptions métier levées côté base (RAISE EXCEPTION dans les
+    // fonctions RPC) portent le code P0001 et contiennent déjà un message
+    // français prêt à afficher (ex: "Stock insuffisant...", "Coût
+    // indisponible...", "Seul un brouillon peut être validé..."). On les
+    // affiche directement plutôt que de les masquer par un message générique.
+    if (code == 'P0001' && error.message.trim().isNotEmpty) {
+      return AppException(error.message.trim());
+    }
     return const AppException('Une erreur est survenue lors de l’opération.');
   }
 

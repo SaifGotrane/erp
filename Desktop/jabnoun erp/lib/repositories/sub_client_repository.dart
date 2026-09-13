@@ -95,4 +95,21 @@ class SubClientRepository extends BaseRepository {
       return 0;
     });
   }
+
+  /// Fetch trimester usage counts for all sub-clients at once (year/trimester
+  /// default to the current one). Returns a map of subClientId -> count.
+  Future<Map<String, int>> getTrimesterUsageBulk({int? year, String? trimester}) {
+    return guard(() async {
+      final data = await client.rpc('get_sub_clients_trimester_usage', params: {
+        'p_year': year,
+        'p_trimester': trimester,
+      });
+      final rows = data as List;
+      return {
+        for (final row in rows)
+          (row as Map<String, dynamic>)['sub_client_id'] as String:
+              (row['usage_count'] as num?)?.toInt() ?? 0,
+      };
+    });
+  }
 }

@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/common/page_scaffold.dart';
 import '../../services/report_export_service.dart';
 import '../../widgets/common/confirm_dialog.dart';
+import '../../widgets/common/partner_search_field.dart';
 
 class SalesReportScreen extends ConsumerWidget {
   const SalesReportScreen({super.key});
@@ -300,14 +301,10 @@ class _SupplierStatementScreenState
             SizedBox(
               width: 300,
               child: suppliersAsync.when(
-                data: (suppliers) => DropdownButtonFormField<String?>(
-                  initialValue: _supplierId,
-                  decoration: const InputDecoration(labelText: 'Fournisseur'),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('—')),
-                    for (final s in suppliers)
-                      DropdownMenuItem(value: s.id, child: Text(s.name)),
-                  ],
+                data: (suppliers) => PartnerSearchField(
+                  partners: suppliers,
+                  selectedId: _supplierId,
+                  label: 'Fournisseur',
                   onChanged: (v) => setState(() => _supplierId = v),
                 ),
                 loading: () => const LinearProgressIndicator(),
@@ -372,14 +369,10 @@ class _CustomerStatementScreenState
             SizedBox(
               width: 300,
               child: customersAsync.when(
-                data: (customers) => DropdownButtonFormField<String?>(
-                  initialValue: _customerId,
-                  decoration: const InputDecoration(labelText: 'Client'),
-                  items: [
-                    const DropdownMenuItem(value: null, child: Text('—')),
-                    for (final c in customers)
-                      DropdownMenuItem(value: c.id, child: Text(c.name)),
-                  ],
+                data: (customers) => PartnerSearchField(
+                  partners: customers,
+                  selectedId: _customerId,
+                  label: 'Client',
                   onChanged: (v) => setState(() => _customerId = v),
                 ),
                 loading: () => const LinearProgressIndicator(),

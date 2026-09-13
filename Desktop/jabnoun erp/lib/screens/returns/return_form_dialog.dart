@@ -10,6 +10,8 @@ import '../../providers/showroom_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/article_search_bar.dart';
+import '../../widgets/common/partner_search_field.dart';
+import '../../widgets/common/location_search_field.dart';
 
 class _ReturnLineEditor {
   String articleId;
@@ -199,18 +201,11 @@ class _SupplierReturnFormDialogState
                   children: [
                     Expanded(
                       child: suppliersAsync.when(
-                        data: (suppliers) => DropdownButtonFormField<String>(
-                          initialValue: _supplierId,
-                          decoration: const InputDecoration(
-                            labelText: 'Fournisseur *',
-                          ),
-                          items: [
-                            for (final s in suppliers)
-                              DropdownMenuItem(
-                                value: s.id,
-                                child: Text(s.name),
-                              ),
-                          ],
+                        data: (suppliers) => PartnerSearchField(
+                          partners: suppliers,
+                          selectedId: _supplierId,
+                          label: 'Fournisseur',
+                          required: true,
                           onChanged: (v) => setState(() => _supplierId = v),
                         ),
                         loading: () => const LinearProgressIndicator(),
@@ -663,18 +658,11 @@ class _CustomerReturnFormDialogState
                   children: [
                     Expanded(
                       child: customersAsync.when(
-                        data: (customers) => DropdownButtonFormField<String>(
-                          initialValue: _customerId,
-                          decoration: const InputDecoration(
-                            labelText: 'Client *',
-                          ),
-                          items: [
-                            for (final c in customers)
-                              DropdownMenuItem(
-                                value: c.id,
-                                child: Text(c.name),
-                              ),
-                          ],
+                        data: (customers) => PartnerSearchField(
+                          partners: customers,
+                          selectedId: _customerId,
+                          label: 'Client',
+                          required: true,
                           onChanged: (v) => setState(() => _customerId = v),
                         ),
                         loading: () => const LinearProgressIndicator(),
@@ -684,76 +672,26 @@ class _CustomerReturnFormDialogState
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: DropdownButtonFormField<bool>(
-                        initialValue: _isDepot,
-                        decoration: const InputDecoration(
-                          labelText: 'Type emplacement',
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: true, child: Text('Dépôt')),
-                          DropdownMenuItem(
-                            value: false,
-                            child: Text('Showroom'),
+                      child: depotsAsync.when(
+                        data: (depots) => showroomsAsync.when(
+                          data: (showrooms) => LocationSearchField(
+                            depots: depots,
+                            showrooms: showrooms,
+                            selectedDepotId: _depotId,
+                            selectedShowroomId: _showroomId,
+                            label: 'Emplacement (optionnel)',
+                            onChanged: (depotId, showroomId) => setState(() {
+                              _depotId = depotId;
+                              _showroomId = showroomId;
+                              _isDepot = depotId != null || showroomId == null;
+                            }),
                           ),
-                        ],
-                        onChanged: (v) => setState(() {
-                          _isDepot = v ?? true;
-                          _depotId = null;
-                          _showroomId = null;
-                        }),
+                          loading: () => const LinearProgressIndicator(),
+                          error: (_, _) => const SizedBox.shrink(),
+                        ),
+                        loading: () => const LinearProgressIndicator(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _isDepot
-                          ? depotsAsync.when(
-                              data: (depots) =>
-                                  DropdownButtonFormField<String?>(
-                                    initialValue: _depotId,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Dépôt (optionnel)',
-                                    ),
-                                    items: [
-                                      const DropdownMenuItem(
-                                        value: null,
-                                        child: Text('—'),
-                                      ),
-                                      for (final d in depots)
-                                        DropdownMenuItem(
-                                          value: d.id,
-                                          child: Text(d.name),
-                                        ),
-                                    ],
-                                    onChanged: (v) =>
-                                        setState(() => _depotId = v),
-                                  ),
-                              loading: () => const LinearProgressIndicator(),
-                              error: (_, _) => const SizedBox.shrink(),
-                            )
-                          : showroomsAsync.when(
-                              data: (showrooms) =>
-                                  DropdownButtonFormField<String?>(
-                                    initialValue: _showroomId,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Showroom (optionnel)',
-                                    ),
-                                    items: [
-                                      const DropdownMenuItem(
-                                        value: null,
-                                        child: Text('—'),
-                                      ),
-                                      for (final s in showrooms)
-                                        DropdownMenuItem(
-                                          value: s.id,
-                                          child: Text(s.name),
-                                        ),
-                                    ],
-                                    onChanged: (v) =>
-                                        setState(() => _showroomId = v),
-                                  ),
-                              loading: () => const LinearProgressIndicator(),
-                              error: (_, _) => const SizedBox.shrink(),
-                            ),
                     ),
                   ],
                 ),

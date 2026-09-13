@@ -7,6 +7,7 @@ import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/page_scaffold.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/common/status_badge.dart';
+import '../../services/transaction_pdf_service.dart';
 import 'transfer_form_dialog.dart';
 
 class TransfersScreen extends ConsumerWidget {
@@ -118,6 +119,11 @@ class TransfersScreen extends ConsumerWidget {
                   await ref.read(transferRepositoryProvider).validate(t.id);
                   ref.invalidate(transferListProvider);
                   if (context.mounted) showAppSnackBar(context, 'Transfert validé avec succès.');
+                  try {
+                    await TransactionPdfService().transferDocument(t.id);
+                  } catch (_) {
+                    if (context.mounted) showAppSnackBar(context, 'Transfert validé, mais la génération du bon a échoué.', isError: true);
+                  }
                 } catch (e) {
                   if (context.mounted) showAppSnackBar(context, e.toString(), isError: true);
                 }

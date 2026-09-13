@@ -19,6 +19,15 @@ class TransactionPdfService {
     await FileSaver.instance.saveFile(name: 'BON_LIVRAISON_$reference', bytes: Uint8List.fromList(bytes), ext: 'pdf', mimeType: MimeType.pdf);
   }
 
+  Future<void> transferDocument(String id) async {
+    final data = await _client.from('stock_transfers').select(
+        '*, source_depot:depots!stock_transfers_source_depot_id_fkey(*), source_showroom:showrooms!stock_transfers_source_showroom_id_fkey(*), destination_depot:depots!stock_transfers_destination_depot_id_fkey(*), destination_showroom:showrooms!stock_transfers_destination_showroom_id_fkey(*), vehicle:vehicles(*), driver:drivers(*), stock_transfer_lines(*, article:articles(reference,designation,unit:units(name,symbol)))').eq('id', id).single();
+    final company = await _client.from('company_settings').select().limit(1).maybeSingle();
+    final bytes = await _buildTransfer(data, company ?? const {});
+    final reference = (data['document_number'] ?? id).toString().replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
+    await FileSaver.instance.saveFile(name: 'BON_TRANSFERT_$reference', bytes: Uint8List.fromList(bytes), ext: 'pdf', mimeType: MimeType.pdf);
+  }
+
   Future<void> _documents(String id, {required bool sale}) async {
     final table = sale ? 'sales' : 'purchases';
     final partner = sale ? 'customer:customers(*)' : 'supplier:suppliers(*)';
@@ -74,6 +83,23 @@ class TransactionPdfService {
       pw.SizedBox(height: 16), pw.Text('Client: ${value(customer, 'name')}'), if (value(customer, 'address').isNotEmpty) pw.Text(value(customer, 'address')), pw.Text('Emplacement: ${value(location, 'name')}'),
       pw.SizedBox(height: 16), pw.TableHelper.fromTextArray(headers: const ['Référence', 'Désignation', 'Qté', 'Unité'], data: lines.map((raw) { final line = raw.cast<String, dynamic>(); final article = (line['article'] as Map?)?.cast<String, dynamic>() ?? {}; final unit = (article['unit'] as Map?)?.cast<String, dynamic>() ?? {}; return [value(article, 'reference'), value(article, 'designation'), value(line, 'quantity'), value(unit, 'symbol').isNotEmpty ? value(unit, 'symbol') : value(unit, 'name')]; }).toList()),
       if (d['vehicle'] != null || d['driver'] != null) pw.Padding(padding: const pw.EdgeInsets.only(top: 16), child: pw.Text('Véhicule: ${value((d['vehicle'] as Map?)?.cast<String, dynamic>() ?? {}, 'registration_number')}  Chauffeur: ${value((d['driver'] as Map?)?.cast<String, dynamic>() ?? {}, 'full_name')}')),
+    ]));
+    return document.save();
+  }
+
+  Future<List<int>> _buildTransfer(Map<String, dynamic> d, Map<String, dynamic> c) async {
+    final theme = await _loadTheme();
+    final document = pw.Document(theme: theme);
+    final source = ((d['source_depot'] ?? d['source_showroom']) as Map?)?.cast<String, dynamic>() ?? {};
+    final destination = ((d['destination_depot'] ?? d['destination_showroom']) as Map?)?.cast<String, dynamic>() ?? {};
+    final lines = (d['stock_transfer_lines'] as List? ?? []).cast<Map>();
+    String value(Map map, String key) => map[key]?.toString() ?? '';
+    document.addPage(pw.MultiPage(pageFormat: PdfPageFormat.a4, margin: const pw.EdgeInsets.all(32), build: (_) => [
+      pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text(value(c, 'company_name'), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)), pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.end, children: [pw.Text('BON DE TRANSFERT', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 20)), pw.Text('N° ${value(d, 'document_number')}'), pw.Text('Date: ${value(d, 'transfer_date')}')])]),
+      pw.SizedBox(height: 16), pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Origine: ${value(source, 'name')}'), pw.Text('Destination: ${value(destination, 'name')}')]),
+      pw.SizedBox(height: 16), pw.TableHelper.fromTextArray(headers: const ['Référence', 'Désignation', 'Qté', 'Unité'], data: lines.map((raw) { final line = raw.cast<String, dynamic>(); final article = (line['article'] as Map?)?.cast<String, dynamic>() ?? {}; final unit = (article['unit'] as Map?)?.cast<String, dynamic>() ?? {}; return [value(article, 'reference'), value(article, 'designation'), value(line, 'quantity'), value(unit, 'symbol').isNotEmpty ? value(unit, 'symbol') : value(unit, 'name')]; }).toList()),
+      if (d['vehicle'] != null || d['driver'] != null) pw.Padding(padding: const pw.EdgeInsets.only(top: 16), child: pw.Text('Véhicule: ${value((d['vehicle'] as Map?)?.cast<String, dynamic>() ?? {}, 'registration_number')}  Chauffeur: ${value((d['driver'] as Map?)?.cast<String, dynamic>() ?? {}, 'full_name')}')),
+      if (value(d, 'notes').isNotEmpty) pw.Padding(padding: const pw.EdgeInsets.only(top: 16), child: pw.Text('Notes: ${value(d, 'notes')}')),
     ]));
     return document.save();
   }

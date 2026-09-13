@@ -111,6 +111,8 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
             notes: _notesCtrl.text.trim(),
           );
       ref.invalidate(saleSubInvoicesProvider(widget.sale.id));
+      ref.invalidate(
+          subClientTrimesterUsageProvider((year: _year, trimester: _trimester)));
       _assignedQty.clear();
       _notesCtrl.clear();
       setState(() => _selectedSubClient = null);
@@ -135,6 +137,8 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
     try {
       await ref.read(saleRepositoryProvider).deleteSubInvoice(sub.id);
       ref.invalidate(saleSubInvoicesProvider(widget.sale.id));
+      ref.invalidate(
+          subClientTrimesterUsageProvider((year: _year, trimester: _trimester)));
       if (mounted) showAppSnackBar(context, 'Sous-facture supprimée.');
     } catch (e) {
       if (mounted) showAppSnackBar(context, e.toString(), isError: true);
@@ -145,6 +149,9 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
   Widget build(BuildContext context) {
     final subInvoicesAsync = ref.watch(saleSubInvoicesProvider(widget.sale.id));
     final subClientsAsync = ref.watch(subClientListProvider);
+    final usageAsync = ref.watch(
+      subClientTrimesterUsageProvider((year: _year, trimester: _trimester)),
+    );
 
     return AlertDialog(
       title: Text(
@@ -235,8 +242,13 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
                   const SizedBox(height: 8),
                   // Sub-client selector
                   subClientsAsync.when(
-                    data: (subClients) =>
-                        _buildSubClientSelector(subClients),
+                    data: (subClients) => usageAsync.when(
+                      data: (usage) =>
+                          _buildSubClientSelector(subClients, usage),
+                      loading: () => const LinearProgressIndicator(),
+                      error: (e, _) => Text(e.toString(),
+                          style: const TextStyle(color: AppColors.danger)),
+                    ),
                     loading: () => const LinearProgressIndicator(),
                     error: (e, _) => Text(e.toString(),
                         style: const TextStyle(color: AppColors.danger)),
@@ -339,8 +351,16 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
     );
   }
 
-  Widget _buildSubClientSelector(List<SubClient> subClients) {
-    final activeClients = subClients.where((sc) => sc.active).toList();
+  Widget _buildSubClientSelector(
+      List<SubClient> subClients, Map<String, int> usageByClient) {
+    // Only sub-clients still under the trimester quota (< 2 uses) are
+    // offered here — the ones already at max usage are hidden entirely.
+    final eligibleClients = subClients
+        .where((sc) => sc.active && (usageByClient[sc.id] ?? 0) < 2)
+        .toList();
+    final ineligibleCount = subClients.where((sc) => sc.active).length -
+        eligibleClients.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -348,8 +368,8 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
           displayStringForOption: (sc) => '${sc.name} — ${sc.cin}',
           optionsBuilder: (textEditingValue) {
             final q = textEditingValue.text.trim().toLowerCase();
-            if (q.isEmpty) return activeClients;
-            return activeClients.where((sc) =>
+            if (q.isEmpty) return eligibleClients;
+            return eligibleClients.where((sc) =>
                 sc.name.toLowerCase().contains(q) ||
                 sc.cin.toLowerCase().contains(q));
           },
@@ -391,11 +411,32 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
                             itemCount: list.length,
                             itemBuilder: (context, i) {
                               final sc = list[i];
+                              final usage = usageByClient[sc.id] ?? 0;
                               return ListTile(
                                 dense: true,
                                 title: Text(sc.name),
                                 subtitle: Text('CIN: ${sc.cin}',
                                     style: const TextStyle(fontSize: 11)),
+                                trailing: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: usage == 0
+                                        ? AppColors.successBg
+                                        : AppColors.warningBg,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$usage/2',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: usage == 0
+                                          ? AppColors.success
+                                          : AppColors.warning,
+                                    ),
+                                  ),
+                                ),
                                 onTap: () => onSelected(sc),
                               );
                             },
@@ -406,37 +447,30 @@ class _SubInvoiceDialogState extends ConsumerState<_SubInvoiceDialog> {
             );
           },
         ),
-        if (_selectedSubClient != null)
-          FutureBuilder<int>(
-            future: ref.read(subClientRepositoryProvider).getTrimesterUsage(
-                  _selectedSubClient!.id,
-                  _year,
-                  _trimester,
-                ),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-              final usage = snapshot.data!;
-              if (usage >= 2) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    '⚠ Ce sous-client a déjà été utilisé $usage fois ce trimestre (max 2).',
-                    style: const TextStyle(
-                        color: AppColors.danger, fontSize: 12),
-                  ),
-                );
-              } else if (usage == 1) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    'ℹ Ce sous-client a été utilisé 1 fois ce trimestre (max 2).',
-                    style: const TextStyle(
-                        color: AppColors.warning, fontSize: 12),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
+        if (eligibleClients.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text(
+              'Aucun sous-client disponible : tous ont atteint la limite de 2 utilisations ce trimestre.',
+              style: TextStyle(color: AppColors.danger, fontSize: 12),
+            ),
+          )
+        else if (ineligibleCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              '$ineligibleCount sous-client(s) masqué(s) (limite de 2 utilisations/trimestre atteinte).',
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+            ),
+          ),
+        if (_selectedSubClient != null &&
+            (usageByClient[_selectedSubClient!.id] ?? 0) == 1)
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text(
+              'ℹ Ce sous-client a déjà été utilisé 1 fois ce trimestre (dernière utilisation autorisée).',
+              style: TextStyle(color: AppColors.warning, fontSize: 12),
+            ),
           ),
       ],
     );

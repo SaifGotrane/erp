@@ -9,6 +9,7 @@ import '../../providers/phase3_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/article_search_bar.dart';
+import '../../widgets/common/partner_search_field.dart';
 
 class _LineEditor {
   String articleId;
@@ -227,10 +228,11 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
                 Row(children: [
                   Expanded(
                     child: suppliersAsync.when(
-                      data: (suppliers) => DropdownButtonFormField<String>(
-                        initialValue: _supplierId,
-                        decoration: const InputDecoration(labelText: 'Fournisseur *'),
-                        items: [for (final s in suppliers) DropdownMenuItem(value: s.id, child: Text(s.name))],
+                      data: (suppliers) => PartnerSearchField(
+                        partners: suppliers,
+                        selectedId: _supplierId,
+                        label: 'Fournisseur',
+                        required: true,
                         onChanged: (v) => setState(() => _supplierId = v),
                       ),
                       loading: () => const LinearProgressIndicator(),

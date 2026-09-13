@@ -5,6 +5,7 @@ import '../../providers/partner_provider.dart';
 import '../../providers/sav_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
+import '../../widgets/common/partner_search_field.dart';
 
 void showSavTicketFormDialog(BuildContext context, WidgetRef ref) {
   showDialog(
@@ -79,10 +80,11 @@ class _SavTicketFormDialogState extends ConsumerState<_SavTicketFormDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 customersAsync.when(
-                  data: (customers) => DropdownButtonFormField<String>(
-                    initialValue: _customerId,
-                    decoration: const InputDecoration(labelText: 'Client *'),
-                    items: [for (final c in customers) DropdownMenuItem(value: c.id, child: Text(c.name))],
+                  data: (customers) => PartnerSearchField(
+                    partners: customers,
+                    selectedId: _customerId,
+                    label: 'Client',
+                    required: true,
                     onChanged: (v) => setState(() => _customerId = v),
                   ),
                   loading: () => const LinearProgressIndicator(),
@@ -101,13 +103,10 @@ class _SavTicketFormDialogState extends ConsumerState<_SavTicketFormDialog> {
                 ),
                 const SizedBox(height: 12),
                 suppliersAsync.when(
-                  data: (suppliers) => DropdownButtonFormField<String?>(
-                    initialValue: _supplierId,
-                    decoration: const InputDecoration(labelText: 'Fournisseur cible (optionnel)'),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('—')),
-                      for (final s in suppliers) DropdownMenuItem(value: s.id, child: Text(s.name)),
-                    ],
+                  data: (suppliers) => PartnerSearchField(
+                    partners: suppliers,
+                    selectedId: _supplierId,
+                    label: 'Fournisseur cible (optionnel)',
                     onChanged: (v) => setState(() => _supplierId = v),
                   ),
                   loading: () => const LinearProgressIndicator(),

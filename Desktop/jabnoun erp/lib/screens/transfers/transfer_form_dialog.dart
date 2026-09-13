@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/article.dart';
 import '../../models/stock_transfer.dart';
-import '../../providers/article_provider.dart';
 import '../../providers/depot_provider.dart';
 import '../../providers/phase3_providers.dart';
 import '../../providers/showroom_provider.dart';
@@ -10,6 +9,7 @@ import '../../providers/vehicle_driver_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/article_search_bar.dart';
+import '../../widgets/common/location_search_field.dart';
 
 class _TransferLineEditor {
   String articleId;
@@ -205,85 +205,53 @@ class _TransferFormDialogState extends ConsumerState<TransferFormDialog> {
               children: [
                 Row(children: [
                   Expanded(
-                    child: DropdownButtonFormField<bool>(
-                      initialValue: _sourceIsDepot,
-                      decoration: const InputDecoration(labelText: 'Type source'),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Dépôt')),
-                        DropdownMenuItem(value: false, child: Text('Showroom')),
-                      ],
-                      onChanged: (v) => setState(() {
-                        _sourceIsDepot = v ?? true;
-                        _sourceDepotId = null;
-                        _sourceShowroomId = null;
-                      }),
+                    child: depotsAsync.when(
+                      data: (depots) => showroomsAsync.when(
+                        data: (showrooms) => LocationSearchField(
+                          depots: depots,
+                          showrooms: showrooms,
+                          selectedDepotId: _sourceDepotId,
+                          selectedShowroomId: _sourceShowroomId,
+                          label: 'Origine',
+                          required: true,
+                          onChanged: (depotId, showroomId) => setState(() {
+                            _sourceDepotId = depotId;
+                            _sourceShowroomId = showroomId;
+                            _sourceIsDepot = depotId != null || showroomId == null;
+                          }),
+                        ),
+                        loading: () => const LinearProgressIndicator(),
+                        error: (_, _) => const SizedBox.shrink(),
+                      ),
+                      loading: () => const LinearProgressIndicator(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _sourceIsDepot
-                        ? depotsAsync.when(
-                            data: (depots) => DropdownButtonFormField<String>(
-                              initialValue: _sourceDepotId,
-                              decoration: const InputDecoration(labelText: 'Dépôt source *'),
-                              items: [for (final d in depots) DropdownMenuItem(value: d.id, child: Text(d.name))],
-                              onChanged: (v) => setState(() => _sourceDepotId = v),
-                            ),
-                            loading: () => const LinearProgressIndicator(),
-                            error: (_, _) => const SizedBox.shrink(),
-                          )
-                        : showroomsAsync.when(
-                            data: (showrooms) => DropdownButtonFormField<String>(
-                              initialValue: _sourceShowroomId,
-                              decoration: const InputDecoration(labelText: 'Showroom source *'),
-                              items: [for (final s in showrooms) DropdownMenuItem(value: s.id, child: Text(s.name))],
-                              onChanged: (v) => setState(() => _sourceShowroomId = v),
-                            ),
-                            loading: () => const LinearProgressIndicator(),
-                            error: (_, _) => const SizedBox.shrink(),
-                          ),
                   ),
                 ]),
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(
-                    child: DropdownButtonFormField<bool>(
-                      initialValue: _destIsDepot,
-                      decoration: const InputDecoration(labelText: 'Type destination'),
-                      items: const [
-                        DropdownMenuItem(value: true, child: Text('Dépôt')),
-                        DropdownMenuItem(value: false, child: Text('Showroom')),
-                      ],
-                      onChanged: (v) => setState(() {
-                        _destIsDepot = v ?? true;
-                        _destDepotId = null;
-                        _destShowroomId = null;
-                      }),
+                    child: depotsAsync.when(
+                      data: (depots) => showroomsAsync.when(
+                        data: (showrooms) => LocationSearchField(
+                          depots: depots,
+                          showrooms: showrooms,
+                          selectedDepotId: _destDepotId,
+                          selectedShowroomId: _destShowroomId,
+                          label: 'Destination',
+                          required: true,
+                          onChanged: (depotId, showroomId) => setState(() {
+                            _destDepotId = depotId;
+                            _destShowroomId = showroomId;
+                            _destIsDepot = depotId != null || showroomId == null;
+                          }),
+                        ),
+                        loading: () => const LinearProgressIndicator(),
+                        error: (_, _) => const SizedBox.shrink(),
+                      ),
+                      loading: () => const LinearProgressIndicator(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _destIsDepot
-                        ? depotsAsync.when(
-                            data: (depots) => DropdownButtonFormField<String>(
-                              initialValue: _destDepotId,
-                              decoration: const InputDecoration(labelText: 'Dépôt destination *'),
-                              items: [for (final d in depots) DropdownMenuItem(value: d.id, child: Text(d.name))],
-                              onChanged: (v) => setState(() => _destDepotId = v),
-                            ),
-                            loading: () => const LinearProgressIndicator(),
-                            error: (_, _) => const SizedBox.shrink(),
-                          )
-                        : showroomsAsync.when(
-                            data: (showrooms) => DropdownButtonFormField<String>(
-                              initialValue: _destShowroomId,
-                              decoration: const InputDecoration(labelText: 'Showroom destination *'),
-                              items: [for (final s in showrooms) DropdownMenuItem(value: s.id, child: Text(s.name))],
-                              onChanged: (v) => setState(() => _destShowroomId = v),
-                            ),
-                            loading: () => const LinearProgressIndicator(),
-                            error: (_, _) => const SizedBox.shrink(),
-                          ),
                   ),
                 ]),
                 const SizedBox(height: 12),
