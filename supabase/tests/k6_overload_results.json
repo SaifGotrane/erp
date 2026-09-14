@@ -1,0 +1,178 @@
+{
+    "metrics": {
+        "http_req_connecting": {
+            "med": 0,
+            "max": 1766.0888,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 4.562519638328373,
+            "min": 0
+        },
+        "http_req_waiting": {
+            "med": 385.0214,
+            "max": 60041.0224,
+            "p(90)": 2328.8185599999997,
+            "p(95)": 5232.987640000005,
+            "avg": 1771.0176376116485,
+            "min": 0
+        },
+        "checks": {
+            "passes": 0,
+            "fails": 18138,
+            "value": 0
+        },
+        "http_req_blocked": {
+            "avg": 8.278138251185357,
+            "min": 0,
+            "med": 0,
+            "max": 6100.8888,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_receiving": {
+            "avg": 55.54751552541627,
+            "min": 0,
+            "med": 0,
+            "max": 59555.7902,
+            "p(90)": 1.0462199999999997,
+            "p(95)": 11.958280000000048
+        },
+        "http_reqs": {
+            "count": 9069,
+            "rate": 17.922236464163078
+        },
+        "query_duration": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "thresholds": {
+                "p(95)<3000": false
+            }
+        },
+        "iterations": {
+            "count": 9069,
+            "rate": 17.922236464163078
+        },
+        "http_req_sending": {
+            "avg": 0.059389568860954804,
+            "min": 0,
+            "med": 0,
+            "max": 37.7551,
+            "p(90)": 0,
+            "p(95)": 0.5103
+        },
+        "auth_success": {
+            "passes": 0,
+            "fails": 9069,
+            "thresholds": {
+                "rate>0.95": true
+            },
+            "value": 0
+        },
+        "query_success": {
+            "passes": 0,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.95": false
+            },
+            "value": 0
+        },
+        "http_req_duration": {
+            "p(95)": 5466.6013,
+            "avg": 1826.6245427059212,
+            "min": 0,
+            "med": 397.166,
+            "max": 60041.5308,
+            "p(90)": 2448.8081
+        },
+        "vus_max": {
+            "value": 100,
+            "min": 100,
+            "max": 100
+        },
+        "rpc_duration": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "thresholds": {
+                "p(95)<5000": false
+            }
+        },
+        "rpc_success": {
+            "fails": 0,
+            "passes": 0,
+            "thresholds": {
+                "rate>0.90": false
+            },
+            "value": 0
+        },
+        "data_received": {
+            "count": 5221751,
+            "rate": 10319.269619470726
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 100
+        },
+        "iteration_duration": {
+            "avg": 2839.448249652662,
+            "min": 1093.6905,
+            "med": 1402.9178,
+            "max": 61055.548,
+            "p(90)": 3467.19546,
+            "p(95)": 6495.594080000009
+        },
+        "http_req_tls_handshaking": {
+            "max": 4897.0918,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 3.7854559929429916,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_failed": {
+            "passes": 9069,
+            "fails": 0,
+            "thresholds": {
+                "rate<0.15": true
+            },
+            "value": 1
+        },
+        "data_sent": {
+            "count": 940455,
+            "rate": 1858.5353284711089
+        }
+    },
+    "setup_data": {
+        "skip": true
+    },
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "auth status 200": {
+                    "name": "auth status 200",
+                    "path": "::auth status 200",
+                    "id": "044cbba30fdd41d762abaae52362312b",
+                    "passes": 0,
+                    "fails": 9069
+                },
+                "auth has access_token": {
+                    "name": "auth has access_token",
+                    "path": "::auth has access_token",
+                    "id": "4031c2ff8138a7207806be083b933579",
+                    "passes": 0,
+                    "fails": 9069
+                }
+            },
+        "name": "",
+        "path": ""
+    }
+}
