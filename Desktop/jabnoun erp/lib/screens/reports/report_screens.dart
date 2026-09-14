@@ -7,6 +7,7 @@ import '../../widgets/common/page_scaffold.dart';
 import '../../services/report_export_service.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/partner_search_field.dart';
+import '../../widgets/common/scrollable_table.dart';
 
 class SalesReportScreen extends ConsumerWidget {
   const SalesReportScreen({super.key});
@@ -94,8 +95,8 @@ class StockReportScreen extends ConsumerWidget {
                   ),
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: DataTable(
+                  child: ScrollableTable(
+                    table: DataTable(
                       columns: const [
                         DataColumn(label: Text('Référence')),
                         DataColumn(label: Text('Désignation')),
@@ -608,8 +609,8 @@ Widget _statementTable(
                       style: TextStyle(color: AppColors.textMuted),
                     ),
                   )
-                : SingleChildScrollView(
-                    child: DataTable(
+                : ScrollableTable(
+                    table: DataTable(
                       columns: const [
                         DataColumn(label: Text('Type')),
                         DataColumn(label: Text('N° document')),

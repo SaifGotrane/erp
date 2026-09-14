@@ -4,6 +4,7 @@ import '../../providers/depot_provider.dart';
 import '../../providers/phase3_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 
 class StockMovementsScreen extends ConsumerWidget {
   const StockMovementsScreen({super.key});
@@ -70,8 +71,8 @@ class StockMovementsScreen extends ConsumerWidget {
               child: movementsAsync.when(
                 data: (movements) => movements.isEmpty
                     ? const Center(child: Text('Aucun mouvement trouvé.', style: TextStyle(color: AppColors.textMuted)))
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('Date')),
                             DataColumn(label: Text('Article')),

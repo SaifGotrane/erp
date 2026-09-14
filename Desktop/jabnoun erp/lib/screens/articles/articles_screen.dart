@@ -5,6 +5,7 @@ import '../../providers/article_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/common/status_badge.dart';
 import 'article_form_dialog.dart';
@@ -65,8 +66,8 @@ class ArticlesScreen extends ConsumerWidget {
               child: articlesAsync.when(
                 data: (articles) => articles.isEmpty
                     ? const Center(child: Text('Aucun article trouvé.', style: TextStyle(color: AppColors.textMuted)))
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('Référence')),
                             DataColumn(label: Text('Désignation')),

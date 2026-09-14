@@ -5,6 +5,7 @@ import '../../providers/phase4_8_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 
 class PaymentsScreen extends ConsumerWidget {
   const PaymentsScreen({super.key});
@@ -39,8 +40,8 @@ class PaymentsScreen extends ConsumerWidget {
               child: async.when(
                 data: (payments) => payments.isEmpty
                     ? const Center(child: Text('Aucun paiement.', style: TextStyle(color: AppColors.textMuted)))
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('N° document')),
                             DataColumn(label: Text('Date')),
@@ -96,8 +97,8 @@ class ReceivablesScreen extends ConsumerWidget {
             data: (sales) {
               final unpaid = sales.where((s) => s.status == 'valide' || s.status == 'partiellement_paye').toList();
               if (unpaid.isEmpty) return const Center(child: Text('Aucune créance.', style: TextStyle(color: AppColors.textMuted)));
-              return SingleChildScrollView(
-                child: DataTable(
+              return ScrollableTable(
+                table: DataTable(
                   columns: const [
                     DataColumn(label: Text('N° document')),
                     DataColumn(label: Text('Date')),
@@ -150,8 +151,8 @@ class PayablesScreen extends ConsumerWidget {
             data: (purchases) {
               final unpaid = purchases.where((p) => p.status == 'valide' || p.status == 'partiellement_paye').toList();
               if (unpaid.isEmpty) return const Center(child: Text('Aucune dette.', style: TextStyle(color: AppColors.textMuted)));
-              return SingleChildScrollView(
-                child: DataTable(
+              return ScrollableTable(
+                table: DataTable(
                   columns: const [
                     DataColumn(label: Text('N° document')),
                     DataColumn(label: Text('Date')),
@@ -232,8 +233,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               child: async.when(
                 data: (expenses) => expenses.isEmpty
                     ? const Center(child: Text('Aucune charge.', style: TextStyle(color: AppColors.textMuted)))
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('N° document')),
                             DataColumn(label: Text('Date')),

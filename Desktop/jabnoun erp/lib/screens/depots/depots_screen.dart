@@ -5,6 +5,7 @@ import '../../providers/depot_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/common/status_badge.dart';
 import 'depot_form_dialog.dart';
@@ -59,8 +60,8 @@ class _DepotsTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-      child: DataTable(
+    return ScrollableTable(
+      table: DataTable(
         columns: const [
           DataColumn(label: Text('Code')),
           DataColumn(label: Text('Nom')),

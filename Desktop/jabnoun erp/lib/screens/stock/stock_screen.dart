@@ -7,6 +7,7 @@ import '../../providers/phase3_providers.dart';
 import '../../providers/showroom_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 import '../../widgets/common/search_field.dart';
 
 class StockScreen extends ConsumerStatefulWidget {
@@ -138,8 +139,8 @@ class _StockScreenState extends ConsumerState<StockScreen> {
                           style: TextStyle(color: AppColors.textMuted),
                         ),
                       )
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('Référence')),
                             DataColumn(label: Text('Désignation')),

@@ -6,6 +6,7 @@ import '../../providers/phase4_8_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/common/status_badge.dart';
 import '../../services/transaction_pdf_service.dart';
@@ -47,40 +48,38 @@ class DeliveryNotesScreen extends ConsumerWidget {
                   initialValue: search,
                   onChanged: (v) => ref.read(deliverySearchProvider.notifier).state = v,
                 ),
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 200, minHeight: 38),
-                    child: DropdownButtonFormField<String?>(
-                      isExpanded: true,
-                      initialValue: statusFilter,
-                      decoration: const InputDecoration(labelText: 'Statut'),
-                      items: const [
-                        DropdownMenuItem(value: null, child: Text('Tous les statuts')),
-                        DropdownMenuItem(value: 'brouillon', child: Text('Brouillon')),
-                        DropdownMenuItem(value: 'livre', child: Text('Livré')),
-                        DropdownMenuItem(value: 'annule', child: Text('Annulé')),
-                      ],
-                      onChanged: (v) => ref.read(deliveryStatusFilterProvider.notifier).state = v,
-                    ),
+                SizedBox(
+                  width: 200,
+                  height: 38,
+                  child: DropdownButtonFormField<String?>(
+                    isExpanded: true,
+                    initialValue: statusFilter,
+                    decoration: const InputDecoration(labelText: 'Statut'),
+                    items: const [
+                      DropdownMenuItem(value: null, child: Text('Tous les statuts')),
+                      DropdownMenuItem(value: 'brouillon', child: Text('Brouillon')),
+                      DropdownMenuItem(value: 'livre', child: Text('Livré')),
+                      DropdownMenuItem(value: 'annule', child: Text('Annulé')),
+                    ],
+                    onChanged: (v) => ref.read(deliveryStatusFilterProvider.notifier).state = v,
                   ),
                 ),
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 240, minHeight: 38),
-                    child: customersAsync.when(
-                      data: (customers) => DropdownButtonFormField<String?>(
-                        isExpanded: true,
-                        initialValue: customerFilter,
-                        decoration: const InputDecoration(labelText: 'Client'),
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('Tous les clients')),
-                          for (final c in customers) DropdownMenuItem(value: c.id, child: Text(c.name)),
-                        ],
-                        onChanged: (v) => ref.read(deliveryCustomerFilterProvider.notifier).state = v,
-                      ),
-                      loading: () => const LinearProgressIndicator(),
-                      error: (_, _) => const SizedBox.shrink(),
+                SizedBox(
+                  width: 240,
+                  height: 38,
+                  child: customersAsync.when(
+                    data: (customers) => DropdownButtonFormField<String?>(
+                      isExpanded: true,
+                      initialValue: customerFilter,
+                      decoration: const InputDecoration(labelText: 'Client'),
+                      items: [
+                        const DropdownMenuItem(value: null, child: Text('Tous les clients')),
+                        for (final c in customers) DropdownMenuItem(value: c.id, child: Text(c.name)),
+                      ],
+                      onChanged: (v) => ref.read(deliveryCustomerFilterProvider.notifier).state = v,
                     ),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, _) => const SizedBox.shrink(),
                   ),
                 ),
                 OutlinedButton.icon(
@@ -119,8 +118,8 @@ class DeliveryNotesScreen extends ConsumerWidget {
               child: async.when(
                 data: (items) => items.isEmpty
                     ? const Center(child: Text('Aucun bon de livraison.', style: TextStyle(color: AppColors.textMuted)))
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('N° document')),
                             DataColumn(label: Text('Date')),

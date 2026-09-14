@@ -5,6 +5,7 @@ import '../../providers/partner_provider.dart';
 import '../../providers/sav_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 import '../../widgets/common/search_field.dart';
 import '../../widgets/common/status_badge.dart';
 import 'sav_ticket_detail_dialog.dart';
@@ -81,8 +82,8 @@ class SavScreen extends ConsumerWidget {
               child: ticketsAsync.when(
                 data: (tickets) => tickets.isEmpty
                     ? const Center(child: Text('Aucun ticket SAV.', style: TextStyle(color: AppColors.textMuted)))
-                    : SingleChildScrollView(
-                        child: DataTable(
+                    : ScrollableTable(
+                        table: DataTable(
                           columns: const [
                             DataColumn(label: Text('N° ticket')),
                             DataColumn(label: Text('Date')),

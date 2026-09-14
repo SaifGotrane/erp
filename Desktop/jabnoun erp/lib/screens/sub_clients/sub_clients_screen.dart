@@ -5,6 +5,7 @@ import '../../providers/sub_client_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/page_scaffold.dart';
+import '../../widgets/common/scrollable_table.dart';
 import '../../widgets/common/search_field.dart';
 
 class SubClientsScreen extends ConsumerWidget {
@@ -47,8 +48,8 @@ class SubClientsScreen extends ConsumerWidget {
                       ),
                     );
                   }
-                  return SingleChildScrollView(
-                    child: DataTable(
+                  return ScrollableTable(
+                    table: DataTable(
                       columns: const [
                         DataColumn(label: Text('Nom')),
                         DataColumn(label: Text('CIN')),
