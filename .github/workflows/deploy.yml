@@ -32,7 +32,10 @@ jobs:
         run: |
           : "${SUPABASE_URL:?Missing SUPABASE_URL secret}"
           : "${SUPABASE_ANON_KEY:?Missing SUPABASE_ANON_KEY secret}"
-          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > .env
+
+          printf 'SUPABASE_URL=%s\nSUPABASE_ANON_KEY=%s\n' \
+            "$SUPABASE_URL" \
+            "$SUPABASE_ANON_KEY" > .env
 
       - name: Install dependencies
         run: flutter pub get
@@ -40,10 +43,42 @@ jobs:
       - name: Build Flutter Web
         run: flutter build web --release
 
+      - name: Verify Cloudflare configuration
+        run: |
+          echo "======================================"
+          echo "Current directory"
+          echo "======================================"
+          pwd
+
+          echo ""
+          echo "======================================"
+          echo "Project files"
+          echo "======================================"
+          ls -la
+
+          echo ""
+          echo "======================================"
+          echo "Wrangler configuration"
+          echo "======================================"
+          cat wrangler.toml
+
+          echo ""
+          echo "======================================"
+          echo "Flutter Web build"
+          echo "======================================"
+          ls -la build/web
+
+          echo ""
+          echo "======================================"
+          echo "Flutter Web index.html"
+          echo "======================================"
+          test -f build/web/index.html
+          echo "index.html OK"
+
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          command: deploy --verbose
           workingDirectory: Desktop/jabnoun erp
