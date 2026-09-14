@@ -1,4 +1,3 @@
-```yaml
 name: Deploy Flutter Web to Cloudflare
 
 on:
@@ -69,4 +68,3 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
           workingDirectory: Desktop/jabnoun erp
-```
