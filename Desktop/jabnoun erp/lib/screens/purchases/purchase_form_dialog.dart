@@ -64,6 +64,7 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
   final _supplierDocRef = TextEditingController();
   final _notes = TextEditingController();
   final _discountPercent = TextEditingController(text: '0');
+  final _finalTotalTtc = TextEditingController();
 
   String? _supplierId;
   String? _depotId;
@@ -71,6 +72,10 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
   DateTime _purchaseDate = DateTime.now();
   final List<_LineEditor> _lines = [];
   bool _saving = false;
+  bool _addStampDuty = false;
+  bool _finalTotalEditedByUser = false;
+
+  static const double _stampDutyAmount = 1;
 
   @override
   void initState() {
@@ -84,6 +89,9 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
       _notes.text = p.notes ?? '';
       _discountPercent.text = p.discountPercent.toString();
       _purchaseDate = p.purchaseDate;
+      _addStampDuty = p.stampDutyAmount > 0;
+      _finalTotalTtc.text = p.totalTtc.toStringAsFixed(3);
+      _finalTotalEditedByUser = true;
       for (final l in p.lines) {
         _lines.add(_LineEditor(
           articleId: l.articleId,
@@ -103,6 +111,7 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
     _supplierDocRef.dispose();
     _notes.dispose();
     _discountPercent.dispose();
+    _finalTotalTtc.dispose();
     for (final l in _lines) {
       l.quantity.dispose();
       l.unitPriceHt.dispose();
@@ -114,6 +123,19 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
   double get _totalHt => _lines.fold(0, (sum, l) => sum + l.lineHt);
   double get _totalTva => _lines.fold(0, (sum, l) => sum + l.lineTva);
   double get _totalTtc => _totalHt + _totalTva;
+  double get _defaultFinalTotalTtc => _totalTtc + (_addStampDuty ? _stampDutyAmount : 0);
+  double get _finalTotalTtcValue =>
+      double.tryParse(_finalTotalTtc.text.trim().replaceAll(',', '.')) ?? _defaultFinalTotalTtc;
+  double get _roundingAdjustment =>
+      _finalTotalTtcValue - _totalTtc - (_addStampDuty ? _stampDutyAmount : 0);
+
+  /// Resynchronise le total final affiché avec le total calculé depuis les
+  /// lignes tant que l'utilisateur n'a pas modifié ce champ manuellement.
+  void _syncFinalTotal() {
+    if (!_finalTotalEditedByUser) {
+      _finalTotalTtc.text = _defaultFinalTotalTtc.toStringAsFixed(3);
+    }
+  }
 
   void _addLine(Article article) {
     setState(() {
@@ -126,6 +148,7 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
         taxRatePercent: article.taxRatePercent,
         discountPercent: TextEditingController(text: '0'),
       ));
+      _syncFinalTotal();
     });
   }
 
@@ -135,6 +158,7 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
       _lines[index].unitPriceHt.dispose();
       _lines[index].discountPercent.dispose();
       _lines.removeAt(index);
+      _syncFinalTotal();
     });
   }
 
@@ -168,6 +192,8 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
           .toList();
 
       final repo = ref.read(purchaseRepositoryProvider);
+      final stampDutyAmount = _addStampDuty ? _stampDutyAmount : 0.0;
+      final roundingAdjustment = _roundingAdjustment;
 
       if (widget.purchase == null) {
         await repo.createDraft(
@@ -177,6 +203,8 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
           paymentMethodId: _paymentMethodId,
           supplierDocumentRef: _supplierDocRef.text.trim(),
           discountPercent: double.tryParse(_discountPercent.text.trim().replaceAll(',', '.')) ?? 0,
+          roundingAdjustment: roundingAdjustment,
+          stampDutyAmount: stampDutyAmount,
           notes: _notes.text.trim(),
           lines: lines,
         );
@@ -192,7 +220,9 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
           'purchase_date': _purchaseDate.toIso8601String().split('T').first,
           'total_ht': _totalHt,
           'total_tva': _totalTva,
-          'total_ttc': _totalTtc,
+          'total_ttc': _totalHt + _totalTva + roundingAdjustment + stampDutyAmount,
+          'rounding_adjustment': roundingAdjustment,
+          'stamp_duty_amount': stampDutyAmount,
         });
       }
 
@@ -339,10 +369,10 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
                             child: Row(
                               children: [
                                 Expanded(flex: 3, child: Text('${_lines[i].articleReference}\n${_lines[i].articleDesignation}', style: const TextStyle(fontSize: 12))),
-                                Expanded(flex: 1, child: TextField(controller: _lines[i].quantity, style: const TextStyle(fontSize: 12), decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()), onTapOutside: (_) => setState(() {}))),
-                                Expanded(flex: 1, child: Padding(padding: const EdgeInsets.only(left: 4), child: TextField(controller: _lines[i].unitPriceHt, style: const TextStyle(fontSize: 12), decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()), onTapOutside: (_) => setState(() {})))),
+                                Expanded(flex: 1, child: TextField(controller: _lines[i].quantity, style: const TextStyle(fontSize: 12), decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()), onTapOutside: (_) => setState(_syncFinalTotal))),
+                                Expanded(flex: 1, child: Padding(padding: const EdgeInsets.only(left: 4), child: TextField(controller: _lines[i].unitPriceHt, style: const TextStyle(fontSize: 12), decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()), onTapOutside: (_) => setState(_syncFinalTotal)))),
                                 Expanded(flex: 1, child: Padding(padding: const EdgeInsets.only(left: 4), child: Text('${_lines[i].taxRatePercent.toStringAsFixed(0)}%', style: const TextStyle(fontSize: 12)))),
-                                Expanded(flex: 1, child: Padding(padding: const EdgeInsets.only(left: 4), child: TextField(controller: _lines[i].discountPercent, style: const TextStyle(fontSize: 12), decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()), onTapOutside: (_) => setState(() {})))),
+                                Expanded(flex: 1, child: Padding(padding: const EdgeInsets.only(left: 4), child: TextField(controller: _lines[i].discountPercent, style: const TextStyle(fontSize: 12), decoration: const InputDecoration(isDense: true, border: OutlineInputBorder()), onTapOutside: (_) => setState(_syncFinalTotal)))),
                                 Expanded(flex: 1, child: Padding(padding: const EdgeInsets.only(left: 4), child: Text(_lines[i].lineHt.toStringAsFixed(3), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)))),
                                 SizedBox(
                                   width: 32,
@@ -361,12 +391,50 @@ class _PurchaseFormDialogState extends ConsumerState<PurchaseFormDialog> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: const Color(0xFFF2F5F8), borderRadius: BorderRadius.circular(6)),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Total HT: ${_totalHt.toStringAsFixed(3)}'),
-                      Text('Total TVA: ${_totalTva.toStringAsFixed(3)}'),
-                      Text('Total TTC: ${_totalTtc.toStringAsFixed(3)}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Total HT: ${_totalHt.toStringAsFixed(3)}'),
+                          Text('Total TVA: ${_totalTva.toStringAsFixed(3)}'),
+                          Text('Total TTC calculé: ${_totalTtc.toStringAsFixed(3)}'),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _addStampDuty,
+                            onChanged: (v) => setState(() {
+                              _addStampDuty = v ?? false;
+                              _syncFinalTotal();
+                            }),
+                          ),
+                          Text('Ajouter le timbre fiscal (${_stampDutyAmount.toStringAsFixed(3)} TND)'),
+                          const Spacer(),
+                          SizedBox(
+                            width: 180,
+                            child: TextFormField(
+                              controller: _finalTotalTtc,
+                              textAlign: TextAlign.right,
+                              decoration: const InputDecoration(labelText: 'Total TTC à payer', isDense: true),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: const TextStyle(fontWeight: FontWeight.w700),
+                              onChanged: (_) => setState(() => _finalTotalEditedByUser = true),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_roundingAdjustment.abs() >= 0.001)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Ajustement d\'arrondi : ${_roundingAdjustment > 0 ? '+' : ''}${_roundingAdjustment.toStringAsFixed(3)}',
+                            style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                          ),
+                        ),
                     ],
                   ),
                 ),

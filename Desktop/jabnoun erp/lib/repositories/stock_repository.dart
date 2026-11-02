@@ -106,23 +106,7 @@ class AuditRepository extends BaseRepository {
 class SettingsRepository extends BaseRepository {
   Future<CompanySettings> fetchSettings() {
     return guard(() async {
-      final data = await client.from('company_settings').select().limit(1).maybeSingle();
-      if (data == null) {
-        final created = await client.from('company_settings').insert({
-          'company_name': 'Entreprise',
-          'currency': 'TND',
-          'allow_negative_stock': false,
-          'cnss_employee_rate': 0.0918,
-          'css_rate': 0.01,
-          'professional_expenses_rate': 0.10,
-          'professional_expenses_annual_cap': 2000,
-          'head_of_household_annual_deduction': 300,
-          'child_annual_deduction': 100,
-          'max_deductible_children': 4,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).select().single();
-        return CompanySettings.fromMap(created);
-      }
+      final data = await client.from('company_settings').select().limit(1).single();
       return CompanySettings.fromMap(data);
     });
   }

@@ -62,6 +62,8 @@ class PurchaseRepository extends BaseRepository {
     String? paymentMethodId,
     String? supplierDocumentRef,
     double discountPercent = 0,
+    double roundingAdjustment = 0,
+    double stampDutyAmount = 0,
     String? notes,
     required List<PurchaseLine> lines,
   }) {
@@ -76,6 +78,7 @@ class PurchaseRepository extends BaseRepository {
         totalTva += line.lineTotalTva;
         totalTtc += line.lineTotalTtc;
       }
+      totalTtc += roundingAdjustment + stampDutyAmount;
 
       final purchaseData = await client.from('purchases').insert({
         'document_number': docNumber,
@@ -89,6 +92,8 @@ class PurchaseRepository extends BaseRepository {
         'total_ht': totalHt,
         'total_tva': totalTva,
         'total_ttc': totalTtc,
+        'rounding_adjustment': roundingAdjustment,
+        'stamp_duty_amount': stampDutyAmount,
         'notes': notes?.isEmpty == true ? null : notes,
         'created_by': client.auth.currentUser?.id,
       }).select().single();

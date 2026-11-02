@@ -76,6 +76,8 @@ class Purchase extends Equatable {
   final double totalHt;
   final double totalTva;
   final double totalTtc;
+  final double roundingAdjustment;
+  final double stampDutyAmount;
   final double amountPaid;
   final String? notes;
   final List<PurchaseLine> lines;
@@ -96,6 +98,8 @@ class Purchase extends Equatable {
     this.totalHt = 0,
     this.totalTva = 0,
     this.totalTtc = 0,
+    this.roundingAdjustment = 0,
+    this.stampDutyAmount = 0,
     this.amountPaid = 0,
     this.notes,
     this.lines = const [],
@@ -117,6 +121,8 @@ class Purchase extends Equatable {
         totalHt: (map['total_ht'] as num?)?.toDouble() ?? 0,
         totalTva: (map['total_tva'] as num?)?.toDouble() ?? 0,
         totalTtc: (map['total_ttc'] as num?)?.toDouble() ?? 0,
+        roundingAdjustment: (map['rounding_adjustment'] as num?)?.toDouble() ?? 0,
+        stampDutyAmount: (map['stamp_duty_amount'] as num?)?.toDouble() ?? 0,
         amountPaid: (map['amount_paid'] as num?)?.toDouble() ?? 0,
         notes: map['notes'] as String?,
         lines: (map['purchase_lines'] as List?)

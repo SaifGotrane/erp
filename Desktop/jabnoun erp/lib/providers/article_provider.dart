@@ -21,6 +21,10 @@ final articleUnitsProvider = FutureProvider<List<ArticleUnit>>((ref) {
   return ref.watch(articleRepositoryProvider).fetchUnits();
 });
 
+final articleBrandsProvider = FutureProvider<List<Brand>>((ref) {
+  return ref.watch(articleRepositoryProvider).fetchBrands();
+});
+
 final taxRatesProvider = FutureProvider<List<TaxRate>>((ref) {
   return ref.watch(articleRepositoryProvider).fetchTaxRates();
 });

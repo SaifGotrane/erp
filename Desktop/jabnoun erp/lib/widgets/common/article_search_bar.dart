@@ -48,15 +48,9 @@ class _ArticleSearchBarState extends State<ArticleSearchBar> {
       decoration: BoxDecoration(border: Border.all(color: Theme.of(context).dividerColor), borderRadius: BorderRadius.circular(4)),
       child: ListView.builder(shrinkWrap: true, itemCount: _results.length, itemBuilder: (_, i) {
         final a = _results[i];
-        return Material(
-          color: Colors.transparent,
-          child: ListTile(
-            dense: true,
-            title: Text('${a.reference} — ${a.designation}'),
-            subtitle: Text('Achat HT ${a.purchasePriceHt.toStringAsFixed(3)}  •  Vente HT ${a.sellingPriceHt.toStringAsFixed(3)}${a.barcode?.isNotEmpty == true ? '  •  ${a.barcode}' : ''}'),
-            onTap: () { widget.onSelected(a); _controller.clear(); setState(() => _results = const []); },
-          ),
-        );
+        return ListTile(dense: true, title: Text('${a.reference} — ${a.designation}'),
+          subtitle: Text('Achat HT ${a.purchasePriceHt.toStringAsFixed(3)}  •  Vente HT ${a.sellingPriceHt.toStringAsFixed(3)}${a.barcode?.isNotEmpty == true ? '  •  ${a.barcode}' : ''}'),
+          onTap: () { widget.onSelected(a); _controller.clear(); setState(() => _results = const []); });
       }),
     ),
   ]);

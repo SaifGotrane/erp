@@ -98,6 +98,13 @@ class ArticleRepository extends BaseRepository {
     });
   }
 
+  Future<List<Brand>> fetchBrands() {
+    return guard(() async {
+      final data = await client.from('brands').select().order('name');
+      return (data as List).map((e) => Brand.fromMap(e as Map<String, dynamic>)).toList();
+    });
+  }
+
   Future<List<TaxRate>> fetchTaxRates() {
     return guard(() async {
       final data = await client.from('tax_rates').select().order('rate_percent');
@@ -132,5 +139,34 @@ class ArticleRepository extends BaseRepository {
 
   Future<void> deleteCategory(String id) {
     return guard(() => client.from('article_categories').delete().eq('id', id));
+  }
+
+  // --- Marques : création / modification ---
+
+  Future<Brand> createBrand(String name) {
+    return guard(() async {
+      final data = await client
+          .from('brands')
+          .insert({'name': name, 'active': true})
+          .select()
+          .single();
+      return Brand.fromMap(data);
+    });
+  }
+
+  Future<Brand> updateBrand(String id, String name) {
+    return guard(() async {
+      final data = await client
+          .from('brands')
+          .update({'name': name})
+          .eq('id', id)
+          .select()
+          .single();
+      return Brand.fromMap(data);
+    });
+  }
+
+  Future<void> deleteBrand(String id) {
+    return guard(() => client.from('brands').delete().eq('id', id));
   }
 }

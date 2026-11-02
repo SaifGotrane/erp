@@ -38,6 +38,25 @@ class ArticleUnit extends Equatable {
   List<Object?> get props => [id, name, symbol];
 }
 
+class Brand extends Equatable {
+  final String id;
+  final String name;
+  final bool active;
+
+  const Brand({required this.id, required this.name, this.active = true});
+
+  factory Brand.fromMap(Map<String, dynamic> map) => Brand(
+        id: map['id'] as String,
+        name: map['name'] as String,
+        active: map['active'] as bool? ?? true,
+      );
+
+  Map<String, dynamic> toInsertMap() => {'name': name, 'active': active};
+
+  @override
+  List<Object?> get props => [id, name, active];
+}
+
 class TaxRate extends Equatable {
   final String id;
   final String label;
@@ -78,6 +97,7 @@ class Article extends Equatable {
   final String designation;
   final String? categoryId;
   final String? unitId;
+  final String? brandId;
   final String? description;
   final String? barcode;
   final double minStock;
@@ -96,6 +116,7 @@ class Article extends Equatable {
     required this.designation,
     this.categoryId,
     this.unitId,
+    this.brandId,
     this.description,
     this.barcode,
     required this.minStock,
@@ -115,6 +136,7 @@ class Article extends Equatable {
         designation: map['designation'] as String,
         categoryId: map['category_id'] as String?,
         unitId: map['unit_id'] as String?,
+        brandId: map['brand_id'] as String?,
         description: map['description'] as String?,
         barcode: map['barcode'] as String?,
         minStock: (map['min_stock'] as num?)?.toDouble() ?? 0,
@@ -133,6 +155,7 @@ class Article extends Equatable {
         'designation': designation,
         'category_id': categoryId,
         'unit_id': unitId,
+        'brand_id': brandId,
         'description': description,
         'barcode': barcode,
         'min_stock': minStock,

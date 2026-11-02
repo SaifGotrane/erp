@@ -30,6 +30,7 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
   late final TextEditingController _margin;
   String? _categoryId;
   String? _unitId;
+  String? _brandId;
   String? _taxRateId;
   bool _saving = false;
 
@@ -48,6 +49,7 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
     _margin = TextEditingController(text: a?.marginPercent.toString() ?? '20');
     _categoryId = a?.categoryId;
     _unitId = a?.unitId;
+    _brandId = a?.brandId;
     _taxRateId = a?.taxRateId.isEmpty ?? true ? null : a?.taxRateId;
   }
 
@@ -100,6 +102,44 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
     }
   }
 
+  /// Permet de créer une marque sans quitter le formulaire d'article,
+  /// comme pour les catégories : ouvre une petite boîte de dialogue, crée
+  /// la marque, l'ajoute à la liste et la sélectionne aussitôt.
+  Future<void> _createBrandInline() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Nouvelle marque'),
+        content: SizedBox(
+          width: 320,
+          child: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Nom de la marque'),
+            onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    try {
+      final brand = await ref.read(articleRepositoryProvider).createBrand(name);
+      ref.invalidate(articleBrandsProvider);
+      setState(() => _brandId = brand.id);
+      if (mounted) showAppSnackBar(context, 'Marque "$name" créée.');
+    } catch (e) {
+      if (mounted) showAppSnackBar(context, e.toString(), isError: true);
+    }
+  }
+
   Future<void> _save(List<TaxRate> taxRates) async {
     if (!_formKey.currentState!.validate()) return;
     if (_taxRateId == null) {
@@ -120,6 +160,7 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
         'designation': _designation.text.trim(),
         'category_id': _categoryId,
         'unit_id': _unitId,
+        'brand_id': _brandId,
         'description': _description.text.trim(),
         'barcode': _barcode.text.trim(),
         'min_stock': double.tryParse(_minStock.text.trim().replaceAll(',', '.')) ?? 0,
@@ -139,6 +180,7 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
           designation: _designation.text.trim(),
           categoryId: _categoryId,
           unitId: _unitId,
+          brandId: _brandId,
           description: _description.text.trim(),
           barcode: _barcode.text.trim(),
           minStock: double.tryParse(_minStock.text.trim().replaceAll(',', '.')) ?? 0,
@@ -164,7 +206,7 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(articleCategoriesProvider);
-    final unitsAsync = ref.watch(articleUnitsProvider);
+    final brandsAsync = ref.watch(articleBrandsProvider);
     final taxRatesAsync = ref.watch(taxRatesProvider);
 
     return AlertDialog(
@@ -222,12 +264,24 @@ class _ArticleFormDialogState extends ConsumerState<_ArticleFormDialog> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: unitsAsync.when(
-                      data: (units) => DropdownButtonFormField<String>(
-                        initialValue: _unitId,
-                        decoration: const InputDecoration(labelText: 'Unité'),
-                        items: [for (final u in units) DropdownMenuItem(value: u.id, child: Text('${u.name} (${u.symbol})'))],
-                        onChanged: (v) => setState(() => _unitId = v),
+                    child: brandsAsync.when(
+                      data: (brands) => Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _brandId,
+                              decoration: const InputDecoration(labelText: 'Marque'),
+                              items: [for (final b in brands) DropdownMenuItem(value: b.id, child: Text(b.name))],
+                              onChanged: (v) => setState(() => _brandId = v),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                            tooltip: 'Nouvelle marque',
+                            onPressed: _createBrandInline,
+                          ),
+                        ],
                       ),
                       loading: () => const LinearProgressIndicator(),
                       error: (_, _) => const SizedBox.shrink(),

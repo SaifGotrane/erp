@@ -48,6 +48,7 @@ class PayrollRepository extends BaseRepository {
     int childrenCount = 0,
     bool isHouseholdHead = false,
     double otherDeductions = 0,
+    double? cssOverride,
     String? notes,
     PayrollParams? params,
   }) {
@@ -64,6 +65,14 @@ class PayrollRepository extends BaseRepository {
         otherDeductions: otherDeductions,
         params: effectiveParams,
       );
+      // La CSS varie d'un employé à l'autre : si une valeur saisie
+      // manuellement est fournie, elle remplace le taux par défaut et le
+      // salaire net est recalculé en conséquence.
+      final css = cssOverride ?? result.css;
+      final netSalary = cssOverride == null
+          ? result.netSalary
+          : double.parse(
+              (result.grossSalary - result.cnssEmployee - result.irpp - css - otherDeductions).toStringAsFixed(3));
       final payslip = Payslip(
         employeeId: employeeId,
         periodMonth: firstDay,
@@ -75,9 +84,9 @@ class PayrollRepository extends BaseRepository {
         cnssEmployee: result.cnssEmployee,
         taxableBase: result.taxableBase,
         irpp: result.irpp,
-        css: result.css,
+        css: css,
         otherDeductions: otherDeductions,
-        netSalary: result.netSalary,
+        netSalary: netSalary,
         notes: notes,
       );
       final data = await client

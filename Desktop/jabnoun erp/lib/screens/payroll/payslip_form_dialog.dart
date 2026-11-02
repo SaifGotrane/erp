@@ -37,10 +37,12 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
   final _transport = TextEditingController();
   final _otherAllowances = TextEditingController();
   final _otherDeductions = TextEditingController();
+  final _css = TextEditingController();
   final _notes = TextEditingController();
   final _childrenCount = TextEditingController();
   bool _isHouseholdHead = false;
   bool _saving = false;
+  bool _cssEditedByUser = false;
   PayrollParams _params = const PayrollParams();
 
   PayrollResult? _preview;
@@ -57,6 +59,13 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
     _notes.text = p?.notes ?? '';
     _childrenCount.text = (widget.employee.childrenCount).toString();
     _isHouseholdHead = widget.employee.isHouseholdHead;
+    // La CSS n'est pas la même pour tous les employés : si une fiche existe
+    // déjà, on garde la valeur précédemment saisie plutôt que de la
+    // recalculer automatiquement.
+    if (p != null) {
+      _css.text = p.css.toStringAsFixed(3);
+      _cssEditedByUser = true;
+    }
     _loadParams();
   }
 
@@ -76,6 +85,7 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
     _transport.dispose();
     _otherAllowances.dispose();
     _otherDeductions.dispose();
+    _css.dispose();
     _notes.dispose();
     _childrenCount.dispose();
     super.dispose();
@@ -83,6 +93,14 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
 
   double _parse(TextEditingController c) => double.tryParse(c.text.replaceAll(',', '.')) ?? 0;
   int _parseInt(TextEditingController c) => int.tryParse(c.text) ?? 0;
+
+  /// Salaire net recalculé à partir de la CSS effectivement saisie par
+  /// l'utilisateur (et non du taux par défaut), puisqu'elle varie d'un
+  /// employé à l'autre.
+  double get _netSalary {
+    if (_preview == null) return 0;
+    return _preview!.grossSalary - _preview!.cnssEmployee - _preview!.irpp - _parse(_css) - _parse(_otherDeductions);
+  }
 
   void _computePreview() {
     setState(() {
@@ -96,6 +114,9 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
         otherDeductions: _parse(_otherDeductions),
         params: _params,
       );
+      if (!_cssEditedByUser) {
+        _css.text = _preview!.css.toStringAsFixed(3);
+      }
     });
   }
 
@@ -112,6 +133,7 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
             childrenCount: _parseInt(_childrenCount),
             isHouseholdHead: _isHouseholdHead,
             otherDeductions: _parse(_otherDeductions),
+            cssOverride: _parse(_css),
             notes: _notes.text,
             params: _params,
           );
@@ -238,12 +260,33 @@ class _PayslipFormDialogState extends ConsumerState<_PayslipFormDialog> {
                     children: [
                       _line('Salaire brut', _preview!.grossSalary),
                       _line('CNSS salarié (${(_params.cnssEmployeeRate * 100).toStringAsFixed(2)}%)', -_preview!.cnssEmployee),
-                      _line('CSS (${(_params.cssRate * 100).toStringAsFixed(2)}%)', -_preview!.css),
                       _line('Base imposable', _preview!.taxableBase, isBold: true),
                       _line('IRPP', -_preview!.irpp),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text('CSS (saisie manuellement, variable par employé)'),
+                          ),
+                          SizedBox(
+                            width: 120,
+                            child: TextFormField(
+                              controller: _css,
+                              textAlign: TextAlign.right,
+                              decoration: const InputDecoration(isDense: true, suffixText: 'TND'),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              onChanged: (_) {
+                                _cssEditedByUser = true;
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
                       _line('Autres retenues', -_parse(_otherDeductions)),
                       const Divider(),
-                      _line('Salaire net', _preview!.netSalary, isBold: true, color: AppColors.success),
+                      _line('Salaire net', _netSalary, isBold: true, color: AppColors.success),
                     ],
                   ),
                 ),
