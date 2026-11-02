@@ -1,8 +1,11 @@
 {
   "installCommand": "echo skip-install",
-  "buildCommand": "echo \"SUPABASE_URL=$SUPABASE_URL\" > .env && echo \"SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY\" >> .env && git clone https://github.com/flutter/flutter.git -b stable --depth 1 _flutter && export PATH=\"$PWD/_flutter/bin:$PATH\" && flutter config --enable-web --no-analytics && flutter pub get && flutter build web --release",
+  "buildCommand": "bash vercel-build.sh",
   "outputDirectory": "build/web",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
